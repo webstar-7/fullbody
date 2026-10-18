@@ -1,0 +1,1555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Full-Body Photo Studio</title>
+<style>
+:root{--bg:#0b101b;--panel:#121a2a;--panel2:#18223a;--line:#26324d;--text:#e8ecf3;--mute:#98a3b8;--gold:#d4a017;--goldink:#241a00;--ok:#3ecf8e;--bad:#ff6b6b}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.4 "Segoe UI",Arial,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+header{height:46px;flex:none;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.2px}
+header h1 b{color:var(--gold)}
+header .by{color:var(--mute);font-size:12px}
+header .sp{flex:1}
+.chip{font-size:11.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.chip.ok{color:var(--ok);border-color:#1d5b43}.chip.bad{color:var(--bad);border-color:#6b2d2d}.chip.wait{color:var(--gold);border-color:#5a4710}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(330px,.75fr);gap:12px;padding:12px}
+#left{display:flex;flex-direction:column;gap:10px;min-height:0}
+#stageWrap{flex:1;min-height:0;position:relative;background:#070b13;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#stage{position:absolute;inset:0;width:100%;height:100%}
+#viewTabs{position:absolute;top:8px;left:8px;display:none;gap:4px;z-index:2}
+#viewTabs button{font-size:12px;padding:4px 10px;border-radius:6px;border:1px solid var(--line);background:rgba(18,26,42,.9);color:var(--mute);cursor:pointer}
+#viewTabs button.on{color:var(--goldink);background:var(--gold);border-color:var(--gold)}
+#note{position:absolute;left:10px;right:10px;bottom:8px;font-size:12px;color:#d6dbe6;background:rgba(0,0,0,.55);padding:4px 8px;border-radius:6px;display:none}
+#note.warn{color:#ffd9a0}
+#actions{flex:none;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button.btn{font:inherit;font-weight:600;padding:9px 16px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}
+button.btn:hover{border-color:#3a4a70}
+button.btn.pri{background:var(--gold);border-color:var(--gold);color:var(--goldink)}
+button.btn.pri:hover{filter:brightness(1.06)}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+button.btn.lg{font-size:15px;padding:11px 22px}
+.inl{display:flex;align-items:center;gap:6px;color:var(--mute);font-size:12.5px}
+select,input[type=number],input[type=text]{font:inherit;color:var(--text);background:#0d1424;border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+select{max-width:220px}
+#right{display:flex;flex-direction:column;min-height:0;gap:10px}
+#cards{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card h3{margin:0 0 8px;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--gold)}
+.row{display:grid;grid-template-columns:96px 1fr 38px;align-items:center;gap:8px;margin:5px 0;font-size:13px}
+.row label{color:var(--mute)}
+.row output{color:var(--mute);font-size:12px;text-align:right}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.sw{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.sw button{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.sw button.on{border-color:var(--gold);box-shadow:0 0 0 2px rgba(212,160,23,.35)}
+.sw input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.fld{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+.fld>span{width:96px;color:var(--mute);flex:none}
+.fld select{flex:1;min-width:0;max-width:none}
+.chk{display:flex;align-items:center;gap:7px;margin:6px 0;font-size:13px;cursor:pointer}
+.chk input{accent-color:var(--gold)}
+details summary{cursor:pointer;color:var(--mute);font-size:12.5px;margin-top:6px}
+.tiny{font-size:11.5px;color:var(--mute);margin:4px 0 0}
+#sheetBox{display:flex;justify-content:center;background:#0b101b;border-radius:8px;padding:8px}
+#sheetView{max-width:100%;max-height:300px;box-shadow:0 2px 10px rgba(0,0,0,.5);background:#fff}
+#bar{flex:none;display:flex;flex-direction:column;gap:7px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px}
+#bar .r{display:flex;gap:8px}
+#bar .r .btn{flex:1}
+#count{font-size:12px;color:var(--mute);text-align:center}
+#printArea{display:none}
+#drop{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(212,160,23,.18);border:3px dashed var(--gold);font-size:20px;z-index:5}
+@media (max-width:900px){body{overflow:auto}main{grid-template-columns:1fr;height:auto}#stageWrap{min-height:55vh}}
+
+.price{margin-top:8px;padding:8px 10px;border-radius:8px;background:#0d1424;border:1px solid var(--line);font-size:15px;font-weight:700;color:var(--gold)}
+.price.none{color:var(--bad);font-size:13px}
+.ov{position:fixed;inset:0;background:rgba(3,6,12,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:12px}
+.mdl{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;width:min(520px,96vw);max-height:92vh;overflow:auto}
+.mdl.wide{width:min(1100px,98vw)}
+.mdl h2{margin:0 0 10px;font-size:17px}
+.mdl .mb{font-size:13.5px;color:#cfd6e4}
+.mdl .mb p{margin:6px 0}
+.mdl .mf{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.mdl .mf .btn{flex:1;min-width:130px}
+.mdl label.f{display:block;margin:9px 0 3px;color:var(--mute);font-size:12.5px}
+.mdl input[type=text],.mdl input[type=password],.mdl input[type=number],.mdl select,.mdl textarea{width:100%;padding:8px 9px;font-size:14px}
+.mdl .err{color:var(--bad);font-size:12.5px;min-height:16px;margin-top:6px}
+.big{font-size:26px;font-weight:800;color:var(--gold)}
+.rec{font:700 28px/1.2 Consolas,monospace;letter-spacing:3px;text-align:center;background:#0d1424;border:1px dashed var(--gold);border-radius:8px;padding:12px;margin:10px 0}
+.dash{position:fixed;inset:0;z-index:40;background:var(--bg);display:flex;flex-direction:column}
+.dash header{flex:none}
+.dtabs{display:flex;gap:6px;padding:10px 14px 0;border-bottom:1px solid var(--line)}
+.dtabs button{font:inherit;padding:8px 14px;border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;background:var(--panel);color:var(--mute);cursor:pointer}
+.dtabs button.on{background:var(--gold);color:var(--goldink);border-color:var(--gold);font-weight:700}
+.dbody{flex:1;overflow:auto;padding:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:10px 0 16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.stat b{display:block;font-size:22px;color:var(--text)}
+.stat span{font-size:12px;color:var(--mute)}
+.stat.good b{color:var(--ok)}.stat.warn b{color:#ffb454}.stat.bad b{color:var(--bad)}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{position:sticky;top:0;background:#0d1424;color:var(--mute);text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);font-weight:600}
+table.t td{padding:6px 8px;border-bottom:1px solid #1b2540;vertical-align:middle}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;border:1px solid var(--line)}
+.tag.paid{color:var(--ok);border-color:#1d5b43}.tag.failed{color:var(--bad);border-color:#6b2d2d}.tag.free{color:#ffb454;border-color:#6b4a14}.tag.pending{color:#ffb454;border-color:#6b4a14}
+.th{width:44px;height:56px;object-fit:cover;border-radius:4px;cursor:zoom-in;background:#222}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.grid .it{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;font-size:12px;color:var(--mute)}
+.grid img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:5px;cursor:zoom-in;background:#222}
+.prow{display:flex;gap:8px;align-items:center;margin:5px 0}
+.prow input{width:100px!important}
+
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.ov.full{align-items:stretch;justify-content:stretch;padding:0;background:var(--bg)}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;width:min(440px,100%);max-height:92vh;overflow:auto}
+.mbox.wide{width:min(560px,100%)}
+.mbox h2{margin:0 0 10px;font-size:17px}
+.mbody p{margin:6px 0}.mbtn{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}.mbtn2{display:flex;gap:8px;margin-top:8px}
+.bad{color:var(--bad)}.tiny{font-size:11.5px;color:var(--mute)}
+.fldm{display:block;margin:8px 0;font-size:13px;color:var(--mute)}.fldm input[type=number],.fldm input[type=text]{display:block;margin-top:4px;width:100%}.fldm textarea{display:block;margin-top:4px;color:var(--text);background:#0d1424;border:1px solid var(--line);border-radius:6px;padding:6px}
+.prow{display:flex;align-items:center;gap:6px;margin:4px 0;color:var(--text)}
+button.lnk{background:none;border:none;color:var(--gold);cursor:pointer;font:inherit;font-size:12px;text-decoration:underline;padding:0 4px}
+#btnReprint{font-size:12.5px;padding:6px 12px}
+.sale{background:#1b2a1f;border:1px solid #2f6b46;border-radius:8px;padding:7px 10px;font-size:13px}
+.sum{white-space:pre-wrap;background:#0d1424;border:1px solid var(--line);border-radius:8px;padding:10px;font:12.5px/1.5 Consolas,monospace}
+.owner{display:flex;flex-direction:column;width:100%;height:100%}
+.ohead{flex:none;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.ohead h2{margin:0;font-size:17px}.ohead .sp{flex:1}.ohead .btn{padding:6px 12px;font-size:13px}
+.chip.rb{cursor:pointer;background:none}.chip.rb.on{background:var(--gold);color:var(--goldink);border-color:var(--gold)}
+.obody{flex:1;overflow:auto;padding:14px 16px 40px}
+.obody h3{margin:20px 0 8px;font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--gold)}
+.integ{padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:12px}.okb{background:#12291f;border:1px solid #1d5b43;color:var(--ok)}.badb{background:#321618;border:1px solid #6b2d2d;color:var(--bad);font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi .kv{font-size:22px;font-weight:700}.kpi .kl{font-size:12px;color:var(--mute)}.kpi.gold .kv{color:var(--gold)}.kpi.warn .kv{color:#ffb86b}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;white-space:nowrap}th{color:var(--mute);font-weight:600}td.r,th.r{text-align:right}
+tr.flag td{background:rgba(255,184,107,.07)}
+.gal{display:flex;flex-wrap:wrap;gap:10px}.gth{width:96px;font-size:11px;color:var(--mute)}.gth .gph{width:90px;height:116px;background:#0d1424 center/cover;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px}
+.seg{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.seg button{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);background:#0d1424;color:var(--mute);cursor:pointer}
+.seg button.on{background:var(--gold);border-color:var(--gold);color:var(--goldink);font-weight:700}
+.bgp{margin:4px 0}
+.fld input[type=color]{width:44px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+body.sales .manual{display:none}
+.pkc{border:1px solid var(--line);border-radius:8px;padding:8px;margin:6px 0;background:#0d1424}
+.pkh{display:flex;gap:8px;align-items:center;margin-bottom:6px}.pkh input{flex:1}
+.pkg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pkg label{font-size:11.5px;color:var(--mute)}.pkg select,.pkg input{width:100%;margin-top:2px}
+#printArea img{display:block}
+#sceneGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px;max-height:250px;overflow-y:auto;padding:2px}
+#sceneGrid .env{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px;border:2px solid var(--line);border-radius:8px;background:#0d1424;color:var(--mute);cursor:pointer;font:inherit;font-size:10.5px}
+#sceneGrid .env canvas{width:100%;height:auto;border-radius:5px;display:block}
+#sceneGrid .env.on{border-color:var(--gold);color:var(--text)}
+#sceneGrid .env span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sceneGrid .env i{position:absolute;top:2px;right:2px;font-style:normal;background:rgba(0,0,0,.7);color:#fff;border-radius:50%;width:16px;height:16px;line-height:16px;font-size:10px;text-align:center}
+
+.mbox .pkg select{font-size:12px}
+</style>
+<style id="printStyle"></style>
+</head>
+<body>
+<header>
+  <h1>Full-Body Photo <b>Studio</b></h1><span class="by">by NYANSATEK Systems</span>
+  <span class="sp"></span>
+  <span class="chip wait" id="chipCam">Camera: starting…</span>
+  <span class="chip wait" id="chipAI">AI cut-out: checking…</span>
+  <button class="chip" id="btnWorker" style="display:none;cursor:pointer;background:none;color:#e8ecf3">On duty: nobody</button>
+  <button class="chip" id="btnDash" style="display:none;cursor:pointer;color:#d4a017;border-color:#5a4710;background:none">Owner dashboard</button>
+  <button class="chip" id="btnRole" style="cursor:pointer;background:none">Worker mode</button>
+</header>
+<main>
+  <section id="left">
+    <div id="stageWrap">
+      <canvas id="stage"></canvas>
+      <div id="viewTabs"><button data-v="result" class="on">Result</button><button data-v="original">Original</button><button data-v="mask">Cut-out mask</button></div>
+      <div id="note"></div>
+      <div id="drop">Drop a photo here</div>
+    </div>
+    <div id="actions">
+      <button class="btn pri lg" id="btnCapture">Take photo (Space)</button>
+      <button class="btn" id="btnRetake" disabled>Retake / live view</button>
+      <button class="btn" id="btnUpload">Use a photo from file…</button>
+      <input type="file" id="file" accept="image/*" hidden>
+      <span class="inl">Countdown <select id="countdown"><option value="0">None</option><option value="3" selected>3 s</option><option value="5">5 s</option></select></span>
+      <span class="inl"><label class="chk" style="margin:0"><input type="checkbox" id="mirror"> Mirror preview</label></span>
+      <span class="inl">Camera <select id="camSel"></select></span>
+    </div>
+  </section>
+  <aside id="right">
+    <div id="cards">
+      <div class="card">
+        <h3>Environment</h3>
+        <div class="seg" id="bgMode"><button data-m="orig" class="on">As photographed</button><button data-m="scene">Environments</button><button data-m="solid">Colour</button><button data-m="grad">Gradient</button></div>
+        <p class="tiny" id="bgOrigNote">The whole scene is kept exactly as the camera saw it, any pose. Only light and colour are improved. To place the person in a different environment, choose <b>Environments</b>, <b>Colour</b> or <b>Gradient</b>.</p>
+        <div id="bgSolid" class="bgp" style="display:none"><div class="sw" id="swatches"></div></div>
+        <div id="bgGrad" class="bgp" style="display:none">
+          <div class="fld"><span>Style</span><select id="gradSel"></select></div>
+          <div class="fld" id="gradCustom" style="display:none"><span>Colours</span><input type="color" id="g1" value="#ffffff"><input type="color" id="g2" value="#7a8aa8"></div>
+        </div>
+        <div id="bgScene" class="bgp" style="display:none">
+          <div id="sceneGrid"></div>
+          <button class="btn" id="btnPic" style="padding:5px 12px;font-size:12.5px;margin-top:6px">Add my own environment pictures…</button><input type="file" id="picFile" accept="image/*" multiple hidden>
+          <p class="tiny">Your pictures are kept on this computer so they are there next time. Click a picture's ✕ to remove it.</p>
+          <div class="row" id="bgblurRow"><label>Depth blur</label><input type="range" id="bgblur" min="0" max="100" value="25"><output></output></div>
+        </div>
+        <div class="row" id="shadRow"><label>Ground shadow</label><input type="range" id="shad" min="0" max="100" value="25"><output></output></div>
+        <div id="cutBox" style="display:none">
+        <div class="fld" style="margin-top:8px"><span>Cut-out method</span><select id="method"><option value="auto">Automatic (AI if ready)</option><option value="plain">Plain backdrop</option><option value="ai">AI only</option></select></div>
+        <p class="tiny">To replace the environment the person has to be cut out. That works offline when the person stands in front of a plain wall or cloth (a green or blue cloth is best for lively poses). In an ordinary room use the AI cut-out (needs internet once).</p>
+        <details><summary>Cut-out fine-tuning</summary>
+          <div class="row"><label>Sensitivity</label><input type="range" id="sens" min="0" max="100" value="50"><output></output></div>
+          <div class="row"><label>Edge trim</label><input type="range" id="trim" min="-50" max="50" value="12"><output></output></div>
+          <div class="row"><label>Edge softness</label><input type="range" id="soft" min="10" max="100" value="35"><output></output></div>
+          <p class="tiny">If an outline looks too thick raise Edge trim; if parts of the person (hands, shoes) are cut away lower Sensitivity.</p>
+        </details>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Framing</h3>
+        <div class="fld"><span>Print shape</span><div class="seg" id="orientSeg" style="margin:0"><button data-o="auto" class="on">Auto</button><button data-o="p">Portrait</button><button data-o="l">Landscape</button></div></div>
+        <label class="chk"><input type="checkbox" id="autofit" checked> Frame the picture automatically after each shot</label>
+        <div class="row"><label>Closeness</label><input type="range" id="fill" min="0" max="100" value="30"><output></output></div>
+        <label class="chk"><input type="checkbox" id="whole"> Show the whole camera picture (blurred margins if the shape does not match)</label>
+        <div class="row"><label>Zoom</label><input type="range" id="zoom" min="30" max="300" value="100"><output></output></div>
+        <div class="row"><label>Left / right</label><input type="range" id="ox" min="-150" max="150" value="0"><output></output></div>
+        <div class="row"><label>Up / down</label><input type="range" id="oy" min="-150" max="150" value="0"><output></output></div>
+        <button class="btn" id="btnAuto" style="padding:5px 12px;font-size:12.5px">Frame now</button>
+        <p class="tiny">Closeness: 0 = as much of the scene as fits the print shape, 100 = tight around the person (any pose, sitting, lying, jumping, groups). Auto print shape picks tall or wide from the pose; press Portrait or Landscape to decide yourself.</p>
+      </div>
+      <div class="card">
+        <h3>Enhance (light touch)</h3>
+        <label class="chk"><input type="checkbox" id="autolevel" checked> Even out exposure</label>
+        <div class="row"><label>Brightness</label><input type="range" id="bri" min="-50" max="50" value="0"><output></output></div>
+        <div class="row"><label>Contrast</label><input type="range" id="con" min="-50" max="50" value="8"><output></output></div>
+        <div class="row"><label>Colour</label><input type="range" id="sat" min="-30" max="40" value="10"><output></output></div>
+        <div class="row"><label>Warmth</label><input type="range" id="warm" min="-30" max="30" value="0"><output></output></div>
+        <div class="row"><label>Sharpness</label><input type="range" id="shp" min="0" max="100" value="35"><output></output></div>
+      </div>
+      <div class="card">
+        <h3>Print size &amp; sheet</h3>
+        <div id="pkgBox" style="display:none"><div class="fld"><span>Package</span><select id="pkgSel"></select></div></div>
+        <div class="manual">
+          <div class="fld"><span>Photo size</span><select id="psize"></select></div>
+          <div class="fld" id="customRow" style="display:none"><span>Custom (mm)</span><input type="number" id="cw" value="100" min="15" max="400" style="width:68px"> × <input type="number" id="ch" value="150" min="15" max="500" style="width:68px"></div>
+          <div class="fld"><span>Paper</span><select id="paper"></select></div>
+          <div class="fld"><span>Photos per sheet</span><select id="copies"></select></div>
+          <div class="fld"><span>Sheets to print</span><select id="nsheets"></select></div>
+          <label class="chk"><input type="checkbox" id="cut" checked> Thin cutting guides (when several per sheet)</label>
+        </div>
+        <div id="priceTag" class="price" style="display:none"></div>
+        <p class="tiny" id="layoutInfo"></p>
+      </div>
+      <div class="card">
+        <h3>Sheet preview</h3>
+        <div id="sheetBox"><canvas id="sheetView"></canvas></div>
+      </div>
+    </div>
+    <div id="bar">
+      <button class="btn pri lg" id="btnPrint" disabled>Print sheet</button>
+      <div class="r"><button class="btn" id="btnSaveSheet" disabled>Save sheet (JPG)</button><button class="btn" id="btnSaveOne" disabled>Save single photo</button></div>
+      <button class="btn" id="btnReprint" style="display:none">Free reprint…</button>
+      <div id="saleInfo"></div>
+      <button class="btn" id="btnEnd">End of day: count cash…</button>
+      <div id="count"></div>
+    </div>
+  </aside>
+</main>
+<div id="printArea"></div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const smooth=(e0,e1,x)=>{const t=clamp((x-e0)/(e1-e0),0,1);return t*t*(3-2*t);};
+const MM=300/25.4; // pixels per millimetre at 300 dpi
+const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0)));
+
+/* ---------------------------------------------------------------- presets */
+// width/height in mm. pw = -1 means "fill the whole paper" (borderless print).
+const PHOTO_SIZES=[['Fill the whole paper (borderless)',-1,-1],['4 × 6 in  (102 × 152 mm)',101.6,152.4],['5 × 7 in  (127 × 178 mm)',127,177.8],['6 × 8 in  (152 × 203 mm)',152.4,203.2],['8 × 10 in  (203 × 254 mm)',203.2,254],['A5  (148 × 210 mm)',148,210],['Mini  (45 × 68 mm)',45,68],['Small  (60 × 90 mm)',60,90],['Custom…',0,0]];
+const FILL_IDX=0, CUSTOM_IDX=PHOTO_SIZES.length-1;
+const PAPERS=[['Canon SELPHY postcard  100 × 148 mm',100,148],['4 × 6 in  102 × 152 mm',101.6,152.4],['5 × 7 in  127 × 178 mm',127,177.8],['6 × 8 in  152 × 203 mm',152.4,203.2],['A5  148 × 210 mm',148,210],['8 × 10 in  203 × 254 mm',203.2,254],['A4  210 × 297 mm',210,297]];
+const SWATCHES=[['White','#ffffff'],['Light grey','#e4e6ea'],['Studio grey','#9a9ea6'],['Charcoal','#3a3d44'],['Black','#0c0c0e'],['Cream','#f3ead8'],['Light blue','#bcd7f0'],['Red','#c62828']];
+// gradients: name, top/centre colour, bottom/edge colour, kind (v = vertical, r = spotlight)
+const GRADS=[['Studio grey','#f4f4f4','#8b8f96','r'],['Soft white','#ffffff','#d5dae1','r'],['Charcoal','#646a75','#14161a','r'],['Warm cream','#fbf3e4','#d6bf9b','r'],['Sky blue','#d6ebfc','#6ea5d8','v'],['Rose','#fde9ed','#e2a0b3','r'],['Royal blue','#4a70d4','#10205a','r'],['Forest green','#5b9a68','#173a24','r'],['Custom colours…','','','v']];
+const SCENES=[['Studio wall and floor','studio'],['Beach','beach'],['Tropical leaves','tropical'],['Garden (soft focus)','garden'],['Mountains and lake','mountain'],['Sunset sky','sunset'],['City at night','city'],['Night lights (bokeh)','bokeh'],['Brick wall','brick'],['Wooden wall','wood'],['White marble','marble'],['Red stage curtain','curtain'],['Kente-style cloth','kente'],['Living room','room']];
+const GAP=3, MARGIN=3; // mm
+const PROC_MAX=2400;   // longest side (px) the cut-out and enhancement are computed at; bigger papers are printed slightly below 300 dpi
+
+/* ---------------------------------------------------------------- state */
+const S={
+  stream:null, video:document.createElement('video'), frame:null, mode:'live', view:'result',
+  mask:null, plainCache:null, used:'', warn:'', fwarn:'', bbox:null,
+  ai:{state:'idle',seg:null},
+  count:0, flash:0, cache:null, result:null, alphaFinal:null,
+  cell:{w:1181,h:1748}, q:{raf:0,stage:0}, bgmode:'orig', sceneSel:'b0', envs:[], envId:0, orient:'auto', autoLand:false, pkg:'', want:4, foot:null, dpi:0
+};
+S.video.muted=true;S.video.playsInline=true;
+
+function val(id){return +$(id).value;}
+function cfg(){
+  const L=layoutFor();
+  return {pw:L.pw,ph:L.ph,bgmode:S.bgmode,whole:$('whole').checked,bg:$('swatchColor').value,gi:val('gradSel'),g1:$('g1').value,g2:$('g2').value,si:S.sceneSel,bgblur:val('bgblur'),shad:val('shad'),
+    zoom:val('zoom')/100,ox:val('ox'),oy:val('oy'),close:val('fill')/100,
+    auto:$('autolevel').checked,bri:val('bri'),con:val('con'),sat:val('sat'),warm:val('warm'),shp:val('shp'),
+    trim:val('trim'),soft:val('soft'),sens:val('sens')};
+}
+
+/* ---------------------------------------------------------------- init UI */
+const swHost=$('swatches');
+const colorIn=document.createElement('input');colorIn.type='color';colorIn.id='swatchColor';colorIn.value='#ffffff';colorIn.title='Pick any colour';
+SWATCHES.forEach(([n,c])=>{const b=document.createElement('button');b.title=n;b.style.background=c;b.dataset.c=c;b.onclick=()=>{setBg(c);};swHost.appendChild(b);});
+swHost.appendChild(colorIn);
+function setBg(c){colorIn.value=c;[...swHost.querySelectorAll('button')].forEach(b=>b.classList.toggle('on',b.dataset.c.toLowerCase()===c.toLowerCase()));queue(2);}
+colorIn.oninput=()=>setBg(colorIn.value);
+GRADS.forEach((g,i)=>{const o=document.createElement('option');o.value=i;o.textContent=g[0];$('gradSel').appendChild(o);});
+PHOTO_SIZES.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s[0];$('psize').appendChild(o);});
+PAPERS.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s[0];$('paper').appendChild(o);});
+$('psize').value=1; // 4 x 6 in
+for(let i=1;i<=10;i++){const o=document.createElement('option');o.value=i;o.textContent=i+(i===1?' sheet':' sheets');$('nsheets').appendChild(o);}
+
+/* what is being printed right now: from the chosen package (sales mode) or from the manual selectors */
+function curSpec(){
+  if(typeof CFG!=='undefined'&&CFG.sales){
+    const p=CFG.packages.find(x=>x.id===S.pkg)||CFG.packages[0];
+    if(p)return {size:p.size,paper:p.paper,copies:p.copies,sheets:p.sheets||1,pkg:p};
+  }
+  return {size:+$('psize').value,paper:+$('paper').value,copies:+$('copies').value||1,sheets:+$('nsheets').value||1,pkg:null};
+}
+const effLand=()=>S.orient==='l'||(S.orient==='auto'&&S.autoLand);
+function geometryFor(size,paper,cw,ch,land){ // pure layout maths, also used to validate packages
+  let [,sw,sh]=PAPERS[paper];let [,pw,ph]=PHOTO_SIZES[size],fill=false;
+  if(land){[sw,sh]=[sh,sw];if(pw>0)[pw,ph]=[ph,pw];}
+  if(pw<0){pw=sw;ph=sh;fill=true;}
+  else if(pw===0){pw=clamp(cw||100,20,400);ph=clamp(ch||150,20,500);if(land)[pw,ph]=[ph,pw];}
+  if(!fill&&pw>=sw-2*MARGIN&&ph>=sh-2*MARGIN&&pw<=sw+3&&ph<=sh+3){pw=sw;ph=sh;fill=true;} // a photo as big as the paper is printed borderless
+  if(fill)return {pw,ph,sw,sh,cols:1,rows:1,max:1,fill};
+  const cols=Math.max(0,Math.floor((sw-2*MARGIN+GAP)/(pw+GAP))),rows=Math.max(0,Math.floor((sh-2*MARGIN+GAP)/(ph+GAP)));
+  return {pw,ph,sw,sh,cols,rows,max:cols*rows,fill};
+}
+function layoutFor(){
+  const sp=curSpec(),L=geometryFor(sp.size,sp.paper,val('cw'),val('ch'),effLand());L.land=effLand();
+  L.n=Math.min(Math.max(1,sp.copies),Math.max(1,L.max));L.sheets=sp.sheets;L.pkg=sp.pkg;
+  return L;
+}
+function arrange(n,L){ // choose columns for n copies
+  for(let c=Math.min(n===1?1:2,L.cols);c<=L.cols;c++){if(Math.ceil(n/c)<=L.rows)return c;}
+  return L.cols||1;
+}
+function refreshCopies(){
+  const L=layoutFor(),sel=$('copies'),prev=S.want||1;sel.innerHTML='';
+  const opts=[1,2,3,4,6,8,9,10,12,15,16,20].filter(n=>n<=Math.max(1,L.max));
+  opts.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n+(n===1?' photo':' photos');sel.appendChild(o);});
+  sel.value=opts.filter(n=>n<=prev).pop()||opts[0];
+  $('copies').disabled=L.fill;
+  $('layoutInfo').textContent=L.fill?'One photo fills the whole sheet, edge to edge. Set the printer to borderless.'
+    :(L.max?`Up to ${L.max} photos fit on this paper (${L.cols} across × ${L.rows} down).`:'This photo size does not fit on the chosen paper.');
+}
+function layoutChanged(){
+  $('customRow').style.display=(+$('psize').value===CUSTOM_IDX)?'flex':'none';
+  refreshCopies();
+  if(typeof refreshPackages==='function')refreshPackages();
+  if(typeof updatePrintBtn==='function')updatePrintBtn();
+  queue(1);updateSheet();
+}
+
+/* ---------------------------------------------------------------- status chips / note */
+function chip(id,cls,text){const e=$(id);e.className='chip '+cls;e.textContent=text;}
+function note(text,warn){const n=$('note');if(!text){n.style.display='none';return;}n.textContent=text;n.className=warn?'warn':'';n.style.display='block';}
+
+/* ---------------------------------------------------------------- camera */
+async function listCams(){
+  try{
+    const ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput');
+    const sel=$('camSel'),cur=sel.value;sel.innerHTML='';
+    ds.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||('Camera '+(i+1));sel.appendChild(o);});
+    if(cur&&ds.some(d=>d.deviceId===cur))sel.value=cur;
+  }catch(e){}
+}
+async function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){chip('chipCam','bad','Camera: not supported in this browser');return;}
+  stopCam();chip('chipCam','wait','Camera: starting…');
+  try{
+    const id=$('camSel').value;
+    const c={video:{width:{ideal:3840},height:{ideal:2160},...(id?{deviceId:{exact:id}}:{})},audio:false};
+    S.stream=await navigator.mediaDevices.getUserMedia(c);
+    S.video.srcObject=S.stream;await S.video.play();
+    await listCams();
+    const t=S.stream.getVideoTracks()[0];if(t&&t.getSettings().deviceId)$('camSel').value=t.getSettings().deviceId;
+    const st=t.getSettings();
+    chip('chipCam','ok',`Camera: ${st.width||S.video.videoWidth}×${st.height||S.video.videoHeight}`);
+  }catch(e){
+    console.warn(e);chip('chipCam','bad','Camera: not available');
+    note('No camera found or permission was blocked. Click the camera icon in the address bar to allow it, or use "Use a photo from file…".',true);
+  }
+}
+function stopCam(){if(S.stream){S.stream.getTracks().forEach(t=>t.stop());S.stream=null;}}
+$('camSel').onchange=()=>startCam();
+
+/* ---------------------------------------------------------------- capture */
+function beep(f,d){try{const a=S.audio||(S.audio=new (window.AudioContext||window.webkitAudioContext)());const o=a.createOscillator(),g=a.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+d);}catch(e){}}
+let cdTimer=null;
+function startCapture(){
+  if(S.mode!=='live'){return;}
+  if(!S.stream||S.video.readyState<2){note('The camera is not ready yet.',true);return;}
+  if(cdTimer){clearInterval(cdTimer);cdTimer=null;S.count=0;return;}
+  const n=+$('countdown').value;
+  if(!n){snap();return;}
+  S.count=n;beep(660,.08);
+  cdTimer=setInterval(()=>{S.count--;if(S.count>0){beep(660,.08);}else{clearInterval(cdTimer);cdTimer=null;snap();}},1000);
+}
+async function snap(){
+  const v=S.video,c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);
+  beep(990,.15);S.flash=1;S.src='camera';
+  await setFrame(c);
+}
+async function setFrame(canvas){
+  S.frame=canvas;S.mode='shot';S.view='result';S.cache=null;
+  setTabs();$('btnRetake').disabled=false;
+  note('Cutting out the background…');await nextFrame();
+  await makeMask();
+  if($('autofit').checked)autoFit(true);
+  note('');queue(1);
+  enableOut(true);
+}
+function retake(){S.mode='live';S.frame=null;S.mask=null;S.bbox=null;S.cache=null;S.result=null;S.fwarn='';S.warn='';$('zoom').value=100;$('ox').value=0;$('oy').value=0;syncOut();enableOut(false);$('viewTabs').style.display='none';note('');$('btnRetake').disabled=true;if(!S.stream)startCam();updateSheet();}
+function enableOut(on){$('btnPrint').disabled=!on;const sv=on&&(!window.saveAllowed||window.saveAllowed());$('btnSaveSheet').disabled=$('btnSaveOne').disabled=!sv;}
+$('btnCapture').onclick=()=>{if(S.mode!=='live')retake();else startCapture();};
+$('btnRetake').onclick=retake;
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'&&!/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)){e.preventDefault();$('btnCapture').click();}
+  if(e.key==='Escape'&&cdTimer){clearInterval(cdTimer);cdTimer=null;S.count=0;}
+});
+$('btnUpload').onclick=()=>$('file').click();
+$('file').onchange=e=>{const f=e.target.files[0];if(f)loadFile(f);e.target.value='';};
+async function loadFile(f){
+  try{
+    const bmp=await createImageBitmap(f,{imageOrientation:'from-image'});
+    const c=document.createElement('canvas');const sc=Math.min(1,3000/Math.max(bmp.width,bmp.height));
+    c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+    if(cdTimer){clearInterval(cdTimer);cdTimer=null;S.count=0;}
+    S.src='file';await setFrame(c);
+  }catch(e){note('That file could not be opened as a picture.',true);}
+}
+const stageWrap=$('stageWrap');
+['dragenter','dragover'].forEach(t=>stageWrap.addEventListener(t,e=>{e.preventDefault();$('drop').style.display='flex';}));
+['dragleave','drop'].forEach(t=>stageWrap.addEventListener(t,e=>{e.preventDefault();$('drop').style.display='none';}));
+stageWrap.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadFile(f);});
+
+/* ---------------------------------------------------------------- image helpers */
+function boxBlur(src,w,h,r){
+  const tmp=new Float32Array(w*h),out=new Float32Array(w*h),pre=new Float64Array(Math.max(w,h)+1);
+  for(let y=0;y<h;y++){const o=y*w;pre[0]=0;for(let x=0;x<w;x++)pre[x+1]=pre[x]+src[o+x];
+    for(let x=0;x<w;x++){const a=x-r<0?0:x-r,b=x+r>w-1?w-1:x+r;tmp[o+x]=(pre[b+1]-pre[a])/(b-a+1);}}
+  for(let x=0;x<w;x++){pre[0]=0;for(let y=0;y<h;y++)pre[y+1]=pre[y]+tmp[y*w+x];
+    for(let y=0;y<h;y++){const a=y-r<0?0:y-r,b=y+r>h-1?h-1:y+r;out[y*w+x]=(pre[b+1]-pre[a])/(b-a+1);}}
+  return out;
+}
+function guidedFilter(I,p,w,h,r,eps){
+  const n=w*h,mI=boxBlur(I,w,h,r),mp=boxBlur(p,w,h,r);
+  const II=new Float32Array(n),Ip=new Float32Array(n);
+  for(let i=0;i<n;i++){II[i]=I[i]*I[i];Ip[i]=I[i]*p[i];}
+  const mII=boxBlur(II,w,h,r),mIp=boxBlur(Ip,w,h,r),a=new Float32Array(n),b=new Float32Array(n);
+  for(let i=0;i<n;i++){const v=mII[i]-mI[i]*mI[i],c=mIp[i]-mI[i]*mp[i];a[i]=c/(v+eps);b[i]=mp[i]-a[i]*mI[i];}
+  const ma=boxBlur(a,w,h,r),mb=boxBlur(b,w,h,r),q=new Float32Array(n);
+  for(let i=0;i<n;i++)q[i]=clamp(ma[i]*I[i]+mb[i],0,1);
+  return q;
+}
+function erode(m,w,h){const t=new Uint8Array(w*h),o=new Uint8Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;t[i]=(m[i]&&(x>0?m[i-1]:0)&&(x<w-1?m[i+1]:0))?1:0;}
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;o[i]=(t[i]&&(y>0?t[i-w]:0)&&(y<h-1?t[i+w]:0))?1:0;}return o;}
+function dilate(m,w,h){const t=new Uint8Array(w*h),o=new Uint8Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;t[i]=(m[i]||(x>0&&m[i-1])||(x<w-1&&m[i+1]))?1:0;}
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;o[i]=(t[i]||(y>0&&t[i-w])||(y<h-1&&t[i+w]))?1:0;}return o;}
+
+/* keep the person (the biggest blob plus parts bridged to it, e.g. shoes), fill holes, return soft mask (0..1) */
+function finalizeMask(soft,w,h){
+  const n=w*h,hard=new Uint8Array(n);
+  for(let i=0;i<n;i++)hard[i]=soft[i]>0.5?1:0;
+  const opened=dilate(erode(hard,w,h),w,h);
+  // bridge small gaps (laces, thin ankles, a gap between trousers and shoes) so separated parts stay with the body
+  let bridged=opened;const br=Math.max(2,Math.round(Math.max(w,h)/320));
+  for(let k=0;k<br;k++)bridged=dilate(bridged,w,h);
+  const lab=new Int32Array(n),stack=new Int32Array(n);let best=0,bestSize=0,nl=0;
+  for(let s=0;s<n;s++){
+    if(!bridged[s]||lab[s])continue;nl++;let sp=0,size=0;stack[sp++]=s;lab[s]=nl;
+    while(sp){const i=stack[--sp];size++;const x=i%w;
+      if(x>0&&bridged[i-1]&&!lab[i-1]){lab[i-1]=nl;stack[sp++]=i-1;}
+      if(x<w-1&&bridged[i+1]&&!lab[i+1]){lab[i+1]=nl;stack[sp++]=i+1;}
+      if(i>=w&&bridged[i-w]&&!lab[i-w]){lab[i-w]=nl;stack[sp++]=i-w;}
+      if(i<n-w&&bridged[i+w]&&!lab[i+w]){lab[i+w]=nl;stack[sp++]=i+w;}}
+    if(size>bestSize){bestSize=size;best=nl;}
+  }
+  // keep the person: the biggest blob plus any other sizeable part (a head or hands separated from the body by clothes that match the backdrop)
+  const sizes=new Int32Array(nl+1);for(let i=0;i<n;i++)if(lab[i]&&opened[i])sizes[lab[i]]++;
+  const keep=new Uint8Array(n);let area=0;
+  for(let i=0;i<n;i++){const l=lab[i];if(l&&opened[i]&&(l===best||sizes[l]>=sizes[best]*.06)){keep[i]=1;area++;}}
+  // fill holes: flood the outside from the border
+  const out=new Uint8Array(n);let sp=0;
+  const push=i=>{if(!keep[i]&&!out[i]){out[i]=1;stack[sp++]=i;}};
+  for(let x=0;x<w;x++){push(x);push((h-1)*w+x);}for(let y=0;y<h;y++){push(y*w);push(y*w+w-1);}
+  while(sp){const i=stack[--sp],x=i%w;
+    if(x>0)push(i-1);if(x<w-1)push(i+1);if(i>=w)push(i-w);if(i<n-w)push(i+w);}
+  // enclosed holes: tiny ones (specks, eyes) and very big ones (a white shirt on a white wall) are filled;
+  // medium background-coloured ones (the gap between an arm and the body, hands on hips) stay see-through
+  const hole=new Int32Array(n);let hl=0;const keepBg=new Uint8Array(n);
+  for(let s=0;s<n;s++){
+    if(keep[s]||out[s]||hole[s])continue;hl++;let q=0,size=0,sumSoft=0;const members=[];stack[q++]=s;hole[s]=hl;
+    while(q){const i=stack[--q];size++;sumSoft+=soft[i];members.push(i);const x=i%w;
+      if(x>0&&!keep[i-1]&&!out[i-1]&&!hole[i-1]){hole[i-1]=hl;stack[q++]=i-1;}
+      if(x<w-1&&!keep[i+1]&&!out[i+1]&&!hole[i+1]){hole[i+1]=hl;stack[q++]=i+1;}
+      if(i>=w&&!keep[i-w]&&!out[i-w]&&!hole[i-w]){hole[i-w]=hl;stack[q++]=i-w;}
+      if(i<n-w&&!keep[i+w]&&!out[i+w]&&!hole[i+w]){hole[i+w]=hl;stack[q++]=i+w;}}
+    if(size>area*.0035&&size<area*.07&&sumSoft/size<.15)for(const i of members)keepBg[i]=1;
+  }
+  const res=new Float32Array(n);
+  for(let i=0;i<n;i++){if(out[i]||keepBg[i])res[i]=0;else res[i]=hard[i]&&keep[i]?Math.max(soft[i],.5):1;}
+  const bl=boxBlur(res,w,h,1);
+  return {w,h,data:bl,area:area/n};
+}
+
+/* ---------------------------------------------------------------- plain-backdrop segmentation (wall + floor aware) */
+function workImage(frame,maxDim){
+  const s=Math.min(1,maxDim/Math.max(frame.width,frame.height)),w=Math.round(frame.width*s),h=Math.round(frame.height*s);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(frame,0,0,w,h);
+  return {w,h,d:x.getImageData(0,0,w,h).data};
+}
+function solveLS(A,n){ // gaussian elimination on augmented n x (n+1)
+  for(let i=0;i<n;i++)A[i][i]+=1e-6;
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];
+    const d=A[c][c]||1e-9;for(let r=c+1;r<n;r++){const f=A[r][c]/d;for(let k=c;k<=n;k++)A[r][k]-=f*A[c][k];}}
+  const x=new Float64Array(n);for(let i=n-1;i>=0;i--){let s=A[i][n];for(let j=i+1;j<n;j++)s-=A[i][j]*x[j];x[i]=s/(A[i][i]||1e-9);}
+  return x;
+}
+/* robust polynomial fit of the background colour (Y, Cb, Cr) over a set of sample pixels */
+function fitBG(F,pts,w,h,basis,nb){
+  const m=pts.length,B=new Float64Array(m*nb);
+  for(let k=0;k<m;k++){const i=pts[k],b=basis(i%w,(i/w)|0);for(let j=0;j<nb;j++)B[k*nb+j]=b[j];}
+  const wt=new Uint8Array(m).fill(1),res=new Float32Array(m),coef=[null,null,null];
+  for(let it=0;it<3;it++){
+    for(let c=0;c<3;c++){
+      const A=Array.from({length:nb},()=>new Float64Array(nb+1));
+      for(let k=0;k<m;k++){if(!wt[k])continue;const v=F[c][pts[k]];for(let i=0;i<nb;i++){const bi=B[k*nb+i];for(let j=0;j<nb;j++)A[i][j]+=bi*B[k*nb+j];A[i][nb]+=bi*v;}}
+      coef[c]=solveLS(A,nb);
+    }
+    let s=0,cnt=0;
+    for(let k=0;k<m;k++){let e=0;for(let c=0;c<3;c++){let p=0;for(let j=0;j<nb;j++)p+=coef[c][j]*B[k*nb+j];const dd=F[c][pts[k]]-p;e+=dd*dd;}res[k]=Math.sqrt(e);if(wt[k]){s+=e;cnt++;}}
+    const sg=Math.sqrt(s/Math.max(1,cnt));for(let k=0;k<m;k++)wt[k]=res[k]<=2.5*sg+1?1:0;
+  }
+  const inl=[];for(let k=0;k<m;k++)if(wt[k])inl.push(res[k]);inl.sort((a,b)=>a-b);
+  return {coef,basis,nb,base:inl.length?inl[Math.floor(inl.length*.97)]:5};
+}
+/* distance of every pixel from the fitted background; darker pixels are compared with a darkened background so cast shadows count as background */
+function residMap(F,mod,w,h,y0,y1){
+  const [Y,Cb,Cr]=F,r=new Float32Array(w*h).fill(1e4),nb=mod.nb,cf=mod.coef;
+  for(let y=y0;y<y1;y++)for(let x=0;x<w;x++){const i=y*w+x,b=mod.basis(x,y);let p0=0,p1=0,p2=0;
+    for(let j=0;j<nb;j++){p0+=cf[0][j]*b[j];p1+=cf[1][j]*b[j];p2+=cf[2][j]*b[j];}
+    const dYr=Y[i]-p0;let db=Cb[i]-p1,dr=Cr[i]-p2,wl=.5;
+    if(dYr<0){const kk=clamp(Y[i]/Math.max(p0,20),.5,1);db=Cb[i]-kk*p1;dr=Cr[i]-kk*p2;wl=.10+.50*smooth(.72,.45,Y[i]/Math.max(p0,20));}
+    const dy=wl*dYr;r[i]=Math.sqrt(dy*dy+db*db+dr*dr);}
+  return r;
+}
+function plainPrepare(frame){
+  const {w,h,d}=workImage(frame,1280),n=w*h;
+  let Y=new Float32Array(n),Cb=new Float32Array(n),Cr=new Float32Array(n);
+  for(let i=0;i<n;i++){const r=d[4*i],g=d[4*i+1],b=d[4*i+2],y=.299*r+.587*g+.114*b;Y[i]=y;Cb[i]=(b-y)*.564;Cr[i]=(r-y)*.713;}
+  Y=boxBlur(Y,w,h,1);Cb=boxBlur(Cb,w,h,1);Cr=boxBlur(Cr,w,h,1);
+  const F=[Y,Cb,Cr],wallPts=[],floorPts=[],st=Math.max(2,Math.round(w/500));
+  for(let y=0;y<h;y+=st)for(let x=0;x<w;x+=st){
+    if(y<h*.10||((x<w*.09||x>w*.91)&&y<h*.58))wallPts.push(y*w+x);
+    else if((x<w*.10||x>w*.90)&&y>h*.84)floorPts.push(y*w+x);}
+  const bW=(x,y)=>{const u=x/w*2-1,v=y/h*2-1;return [1,u,v,u*u,u*v,v*v];};
+  const bF=(x,y)=>{const u=x/w*2-1,v=y/h*2-1;return [1,u,v,u*u];};
+  const wall=fitBG(F,wallPts,w,h,bW,6);
+  let r=residMap(F,wall,w,h,0,h),base=wall.base,floor=null;
+  if(floorPts.length>150){
+    floor=fitBG(F,floorPts,w,h,bF,4);
+    const rf=residMap(F,floor,w,h,Math.floor(h*.5),h);
+    for(let i=Math.floor(h*.5)*w;i<n;i++)if(rf[i]<r[i])r[i]=rf[i];   // a pixel is background if either the wall or the floor explains it
+    base=Math.max(base,floor.base);
+  }
+  return {w,h,r,base,hasFloor:!!floor};
+}
+function plainMask(sens){
+  const c=S.plainCache,f=Math.pow(2,(50-sens)/30),Tl=Math.max(4,c.base*1.3)*f,Th=Tl*2.8,n=c.w*c.h,soft=new Float32Array(n);
+  for(let i=0;i<n;i++)soft[i]=smooth(Tl,Th,c.r[i]);
+  return finalizeMask(soft,c.w,c.h);
+}
+/* bounding box of the person (fractions of the picture), robust to a few stray pixels */
+function maskBBox(mk){
+  const {w,h,data}=mk,rows=new Uint32Array(h),cols=new Uint32Array(w);let sx=0,cn=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(data[y*w+x]>.5){rows[y]++;cols[x]++;sx+=x;cn++;}
+  if(cn<w*h*.003)return null;
+  const rt=Math.max(2,w*.004),ct=Math.max(2,h*.004);let t=-1,b=-1,l=-1,r=-1;
+  for(let y=0;y<h;y++)if(rows[y]>=rt){if(t<0)t=y;b=y;}
+  for(let x=0;x<w;x++)if(cols[x]>=ct){if(l<0)l=x;r=x;}
+  if(t<0||l<0)return null;
+  return {top:t/h,bot:(b+1)/h,left:l/w,right:(r+1)/w,cx:sx/cn/w};
+}
+
+/* ---------------------------------------------------------------- AI segmentation (optional, needs internet once) */
+async function loadAI(){
+  if(S.ai.state==='loading'||S.ai.state==='ready')return;
+  S.ai.state='loading';chip('chipAI','wait','AI cut-out: loading…');
+  try{
+    const base='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+    const mod=await import(base+'/vision_bundle.mjs');
+    const fileset=await mod.FilesetResolver.forVisionTasks(base+'/wasm');
+    S.ai.seg=await mod.ImageSegmenter.createFromOptions(fileset,{
+      baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite'},
+      runningMode:'IMAGE',outputCategoryMask:false,outputConfidenceMasks:true});
+    S.ai.state='ready';chip('chipAI','ok','AI cut-out: ready');
+  }catch(e){
+    console.warn('AI load failed',e);S.ai.state='failed';chip('chipAI','bad','AI cut-out: offline (plain-backdrop mode)');
+  }
+}
+function aiMask(frame){
+  const wi=workImage(frame,1280),c=document.createElement('canvas');c.width=wi.w;c.height=wi.h;
+  c.getContext('2d').drawImage(frame,0,0,wi.w,wi.h);
+  const res=S.ai.seg.segment(c);
+  const ms=res.confidenceMasks,m=ms[ms.length-1],w=m.width,h=m.height,arr=Float32Array.from(m.getAsFloat32Array());
+  try{res.close&&res.close();}catch(e){}
+  // decide polarity: the person is usually in the lower centre, the background at the top edge
+  let cen=0,cn=0,top=0,tn=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const v=arr[y*w+x];
+    if(y>h*.4&&x>w*.35&&x<w*.65){cen+=v;cn++;}if(y<h*.08){top+=v;tn++;}}
+  if(top/tn>cen/cn)for(let i=0;i<arr.length;i++)arr[i]=1-arr[i];
+  const soft=new Float32Array(arr.length);for(let i=0;i<arr.length;i++)soft[i]=smooth(.3,.7,arr[i]);
+  return finalizeMask(soft,w,h);
+}
+
+async function makeMask(){
+  const method=$('method').value;let used='plain';
+  if(method!=='plain'&&S.ai.state==='ready'){
+    try{S.mask=aiMask(S.frame);used='ai';}catch(e){console.warn('AI failed',e);}
+  }
+  if(used==='plain'){
+    S.plainCache=plainPrepare(S.frame);S.mask=plainMask(val('sens'));
+    if(S.plainCache.base>14)S.warn='The background behind the person is not plain, so the cut-out may look rough. Use a plain wall or cloth.';
+    else S.warn='';
+    if(method==='ai')S.warn='AI cut-out is not available (no internet yet), so plain-backdrop mode was used. '+S.warn;
+  }else S.warn='';
+  S.used=used;S.maskId=(S.maskId||0)+1;
+  if(S.mask.area<.03)S.warn=(used==='plain'&&S.plainCache.base>14)?'The background behind the person is not plain, so plain-backdrop mode cannot find the person. Use a plain wall or cloth, or switch on AI cut-out (needs internet).':'No person was found in the picture. Check the lighting and that the background is plain.';
+  else if(S.mask.area>.85)S.warn='The cut-out found almost the whole picture. Make sure the background is plain and clearly different from clothes and hair.';
+}
+
+/* ---------------------------------------------------------------- framing */
+function geomFor(fw,fh,c){
+  const a=c.pw/c.ph;let ch=fh/c.zoom,cw=ch*a,cx=fw/2+c.ox/100*fw/2,cy=fh/2+c.oy/100*fh/2;
+  if(c.bgmode==='orig'&&!c.whole){ // keeping the original scene: the crop must stay inside the camera picture
+    if(ch>fh){ch=fh;cw=ch*a;}if(cw>fw){cw=fw;ch=cw/a;}
+    cx=clamp(cx,cw/2,fw-cw/2);cy=clamp(cy,ch/2,fh-ch/2);
+  }
+  return {sx:cx-cw/2,sy:cy-ch/2,cw,ch};
+}
+function ensureBBox(){if(S.mask&&S.bboxFor!==S.maskId){S.bbox=maskBBox(S.mask);S.bboxFor=S.maskId;}return S.mask?S.bbox:null;}
+/* is the cut-out trustworthy enough to steer the framing? (plain backdrop, or AI) */
+const subjectKnown=()=>!!S.mask&&S.mask.area>.01&&S.mask.area<.85&&(S.used==='ai'||(S.plainCache&&S.plainCache.base<=14));
+/* frame the picture for any pose: print shape from the pose, then a crop that keeps the whole subject and as much scene as asked for */
+function autoFit(silent){
+  const F=S.frame;if(!F)return;
+  const fw=F.width,fh=F.height,known=subjectKnown(),bb=known?ensureBBox():null;
+  if(S.orient==='auto'){ // tall or wide print from the pose (or from the camera picture when there is no cut-out)
+    const prev=S.autoLand;
+    S.autoLand=bb?((bb.right-bb.left)*fw>(bb.bot-bb.top)*fh*1.1):fw>fh*1.05;
+    if(prev!==S.autoLand){layoutChanged();}
+  }
+  const c=cfg(),a=c.pw/c.ph,close=c.close;
+  if(c.whole){ // contain: the whole camera picture fits inside the print
+    const ch=Math.max(fh,fw/a);
+    $('zoom').value=Math.round(clamp(fh/ch,.3,3)*100);$('ox').value=0;$('oy').value=0;syncOut();if(!silent)queue(1);return;
+  }
+  // largest crop of the print shape that fits inside the camera picture
+  let mh=fh,mw=mh*a;if(mw>fw){mw=fw;mh=mw/a;}
+  let ch=mh,cx=fw/2,cy=fh/2;
+  if(bb){
+    const bt=bb.top*fh,bm=bb.bot*fh,bl=bb.left*fw,br=bb.right*fw,bw=Math.max(10,br-bl),bh=Math.max(10,bm-bt);
+    const need=Math.max(bh/.94,bw/.94/a),tight=Math.max(need,Math.max(bh/.88,bw/.88/a)*.98);
+    ch=mh+(Math.min(tight,mh)-mh)*close;               // closeness 0 = widest crop, 100 = tight on the person
+    if(need>ch)ch=c.bgmode==='orig'?Math.min(need,mh):need;   // never cut the person; with a replaced environment the crop may grow past the picture
+    cx=(bl+br)/2;cy=(bt+bm)/2;
+  }
+  const cw=ch*a;
+  if(c.bgmode==='orig'){cx=clamp(cx,cw/2,fw-cw/2);cy=clamp(cy,ch/2,fh-ch/2);}
+  $('zoom').value=Math.round(clamp(fh/ch,.3,3)*100);
+  $('ox').value=Math.round(clamp((cx-fw/2)/(fw/2)*100,-150,150));
+  $('oy').value=Math.round(clamp((cy-fh/2)/(fh/2)*100,-150,150));
+  syncOut();if(!silent)queue(1);
+}
+/* things the operator should know about the framing */
+function framingWarnings(){
+  const F=S.frame;S.fwarn='';if(!F)return;
+  const c=cfg(),g=geomFor(F.width,F.height,c),W=[];
+  const dpi=g.ch/(c.ph/25.4);S.dpi=dpi;
+  if(dpi<140)W.push(`The camera gives only about ${Math.round(dpi)} dpi at this print size, so the print will look soft. A better camera or a phone photo (use "Use a photo from file") gives sharper results.`);
+  S.fwarn=W.join(' ');
+}
+
+/* ---------------------------------------------------------------- environments (backdrops) */
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function newCanvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
+function softBlur(cv,amount){ // blur by repeated down- and up-sampling (works in every browser)
+  if(amount<=0)return cv;
+  const f=1/(1+amount/10),w=Math.max(8,Math.round(cv.width*f)),h=Math.max(8,Math.round(cv.height*f));
+  let a=newCanvas(w,h),x=a.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(cv,0,0,w,h);
+  const b=newCanvas(w*2,h*2),y=b.getContext('2d');y.imageSmoothingQuality='high';y.drawImage(a,0,0,w*2,h*2);
+  const o=newCanvas(cv.width,cv.height),z=o.getContext('2d');z.imageSmoothingQuality='high';z.drawImage(b,0,0,cv.width,cv.height);return o;
+}
+function lin(x,W,H,y0,y1,stops){const g=x.createLinearGradient(0,y0,0,y1);stops.forEach(([p,c])=>g.addColorStop(p,c));x.fillStyle=g;x.fillRect(0,0,W,H);}
+function band(x,W,y0,y1,stops){const g=x.createLinearGradient(0,y0,0,y1);stops.forEach(([p,c])=>g.addColorStop(p,c));x.fillStyle=g;x.fillRect(0,y0,W,y1-y0);}
+function glow(x,cx,cy,r,col,al){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,col.replace('A',al));g.addColorStop(1,col.replace('A',0));x.fillStyle=g;x.fillRect(cx-r,cy-r,2*r,2*r);}
+const rgb=(r,g,b,a)=>`rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a==null?1:a})`;
+function leaf(x,cx,cy,len,wid,ang,col,vein){x.save();x.translate(cx,cy);x.rotate(ang);x.fillStyle=col;x.beginPath();x.moveTo(0,0);x.quadraticCurveTo(wid,-len*.4,0,-len);x.quadraticCurveTo(-wid,-len*.4,0,0);x.fill();x.strokeStyle=vein;x.lineWidth=Math.max(1,len*.012);x.beginPath();x.moveTo(0,0);x.lineTo(0,-len*.95);x.stroke();x.restore();}
+function drawScene(kind,W,H,foot){
+  const cv=newCanvas(W,H),x=cv.getContext('2d'),R=rng(1234+kind.length*7),f=clamp(foot==null?.82:foot,.4,.98),hz=clamp(f-.07,.35,.93)*H;
+  if(kind==='studio'){
+    lin(x,W,H,0,hz,[[0,'#cfd3da'],[1,'#e6e8ec']]);
+    band(x,W,hz,H,[[0,'#a9aeb7'],[1,'#7c818a']]);
+    glow(x,W/2,hz*.8,W*.75,'rgba(255,255,255,A)',.55);
+    x.fillStyle='rgba(0,0,0,.10)';x.fillRect(0,hz-2,W,4);
+  }else if(kind==='brick'){
+    x.fillStyle='#b9b2a8';x.fillRect(0,0,W,H);
+    const bh=W/20,bw=W/8.5;
+    for(let r=0;r*bh<hz+bh;r++){for(let c=-1;c*bw<W+bw;c++){const ox=(r%2)*bw/2,hue=R();x.fillStyle=rgb(150+hue*50,72+hue*28,58+hue*20);x.fillRect(c*bw+ox+2,r*bh+2,bw-4,bh-4);}}
+    band(x,W,hz,H,[[0,'#6b665f'],[1,'#3d3a36']]);
+  }else if(kind==='bokeh'){
+    lin(x,W,H,0,H,[[0,'#0f1730'],[.6,'#241a3d'],[1,'#12101f']]);
+    const cols=['rgba(255,196,120,A)','rgba(255,150,90,A)','rgba(120,170,255,A)','rgba(255,120,170,A)','rgba(255,240,200,A)'];
+    for(let i=0;i<46;i++){const r=W*(.025+R()*.075);glow(x,R()*W,R()*H*.85,r,cols[Math.floor(R()*cols.length)],(.25+R()*.4).toFixed(2));}
+    band(x,W,hz,H,[[0,'rgba(10,10,18,0)'],[1,'rgba(10,10,18,.6)']]);
+  }else if(kind==='garden'){
+    lin(x,W,H,0,H,[[0,'#cde9f7'],[.35,'#a9cf9b'],[1,'#4f7f43']]);
+    const gr=['rgba(60,120,50,A)','rgba(90,150,60,A)','rgba(40,90,45,A)','rgba(120,170,80,A)'];
+    for(let i=0;i<70;i++){glow(x,R()*W,H*(.1+R()*.8),W*(.06+R()*.16),gr[Math.floor(R()*4)],(.35+R()*.4).toFixed(2));}
+    const fl=['rgba(255,170,190,A)','rgba(255,230,120,A)','rgba(255,255,255,A)'];
+    for(let i=0;i<30;i++){glow(x,R()*W,H*(.25+R()*.5),W*(.012+R()*.03),fl[Math.floor(R()*3)],.9);}
+    band(x,W,hz,H,[[0,'rgba(70,120,55,0)'],[1,'rgba(50,95,40,.75)']]);
+  }else if(kind==='sunset'){
+    lin(x,W,H,0,hz,[[0,'#2b2060'],[.45,'#b2407c'],[.8,'#f59a5b'],[1,'#ffd98a']]);
+    glow(x,W*.5,hz*.98,W*.55,'rgba(255,236,170,A)',.85);
+    band(x,W,hz,H,[[0,'#3a2a45'],[1,'#120d1c']]);
+  }else if(kind==='beach'){
+    const sea=clamp(f-.32,.28,.62)*H,sh=H*.09;
+    lin(x,W,H,0,sea,[[0,'#5aa9e6'],[1,'#cfeaff']]);
+    for(let i=0;i<7;i++)glow(x,R()*W,R()*sea*.7,W*(.10+R()*.12),'rgba(255,255,255,A)',.55);
+    band(x,W,sea,sea+sh,[[0,'#1f7fb8'],[1,'#58c1d6']]);
+    x.fillStyle='rgba(255,255,255,.85)';x.fillRect(0,sea+sh-H*.004,W,H*.008);
+    band(x,W,sea+sh,H,[[0,'#f0dfb2'],[1,'#d3b67f']]);
+    for(let i=0;i<260;i++){x.fillStyle=`rgba(150,120,70,${(.05+R()*.08).toFixed(2)})`;x.fillRect(R()*W,sea+sh+R()*(H-sea-sh),W*.004,W*.004);}
+    glow(x,W*.8,sea*.25,W*.18,'rgba(255,250,210,A)',.9);
+  }else if(kind==='tropical'){
+    lin(x,W,H,0,H,[[0,'#0e3b2a'],[1,'#1c6a3f']]);
+    const g=['#15663a','#1f8a4c','#0f4f2c','#2aa05a','#0c3d22'];
+    for(let i=0;i<26;i++){const cx=R()*W,cy=H*(.2+R()*.9),len=W*(.35+R()*.45),ang=(R()-.5)*3;leaf(x,cx,cy,len,len*(.18+R()*.1),ang,g[Math.floor(R()*5)],'rgba(0,30,10,.35)');}
+    glow(x,W*.75,H*.12,W*.5,'rgba(255,255,200,A)',.25);
+    band(x,W,hz,H,[[0,'rgba(0,20,8,0)'],[1,'rgba(0,20,8,.5)']]);
+  }else if(kind==='mountain'){
+    lin(x,W,H,0,hz,[[0,'#7db8ee'],[1,'#e6f3ff']]);
+    for(let i=0;i<5;i++)glow(x,R()*W,R()*hz*.5,W*(.1+R()*.1),'rgba(255,255,255,A)',.6);
+    const layers=[['#9fb5d1',.46],['#7a93b6',.58],['#52709b',.70]];
+    layers.forEach(([c,yy],li)=>{x.fillStyle=c;x.beginPath();x.moveTo(0,hz);let px=0;while(px<=W){const peak=hz-(H*(.30-li*.07))*(.35+R()*.65);x.lineTo(px,peak);px+=W*(.08+R()*.1);}x.lineTo(W,hz);x.closePath();x.fill();});
+    band(x,W,hz,H,[[0,'#4b8fb4'],[1,'#1d4f6e']]);
+    x.fillStyle='rgba(255,255,255,.18)';for(let i=0;i<40;i++)x.fillRect(R()*W,hz+R()*(H-hz),W*(.04+R()*.12),H*.003);
+    band(x,W,H*.93,H,[[0,'rgba(30,80,40,0)'],[1,'rgba(30,80,40,.9)']]);
+  }else if(kind==='city'){
+    lin(x,W,H,0,hz,[[0,'#090e28'],[.7,'#2b2352'],[1,'#7a3f70']]);
+    for(let i=0;i<60;i++){x.fillStyle=`rgba(255,255,255,${(.3+R()*.6).toFixed(2)})`;x.fillRect(R()*W,R()*hz*.5,W*.003,W*.003);}
+    let px=-W*.02;while(px<W){const bw=W*(.05+R()*.08),bh=H*(.12+R()*.34);x.fillStyle=rgb(14+R()*14,16+R()*14,34+R()*20);x.fillRect(px,hz-bh,bw,bh+2);
+      const ww=bw/6,hh=bh/16;for(let yy=hz-bh+hh;yy<hz-hh;yy+=hh*1.9)for(let xx=px+ww*.6;xx<px+bw-ww;xx+=ww*1.6){if(R()<.5){x.fillStyle=R()<.8?'rgba(255,214,120,.85)':'rgba(150,200,255,.8)';x.fillRect(xx,yy,ww,hh);}}
+      px+=bw+W*.004;}
+    band(x,W,hz,H,[[0,'#1a1830'],[1,'#07060f']]);glow(x,W/2,hz,W*.8,'rgba(255,170,100,A)',.18);
+  }else if(kind==='wood'){
+    const pw=W/9;for(let i=0;i*pw<W+pw;i++){const t=R();x.fillStyle=rgb(150+t*40,98+t*28,58+t*18);x.fillRect(i*pw,0,pw,hz);
+      for(let k=0;k<40;k++){x.strokeStyle=`rgba(70,40,15,${(.05+R()*.1).toFixed(2)})`;x.lineWidth=Math.max(1,W*.0012);x.beginPath();const gx=i*pw+R()*pw;x.moveTo(gx,0);x.bezierCurveTo(gx+W*.01,hz*.3,gx-W*.01,hz*.6,gx+W*.004,hz);x.stroke();}
+      x.fillStyle='rgba(30,15,5,.45)';x.fillRect(i*pw,0,Math.max(2,W*.0025),hz);}
+    band(x,W,hz,H,[[0,'#5d3b20'],[1,'#2e1c0e']]);
+  }else if(kind==='marble'){
+    lin(x,W,H,0,hz,[[0,'#f6f6f4'],[1,'#e2e2e0']]);
+    for(let i=0;i<22;i++){x.strokeStyle=`rgba(${110+R()*40|0},${110+R()*40|0},${120+R()*40|0},${(.10+R()*.22).toFixed(2)})`;x.lineWidth=W*(.0015+R()*.004);x.beginPath();let px=R()*W,py=-5;x.moveTo(px,py);for(let k=0;k<6;k++){px+=(R()-.5)*W*.25;py+=hz/6;x.quadraticCurveTo(px+(R()-.5)*W*.1,py-hz/12,px,py);}x.stroke();}
+    band(x,W,hz,H,[[0,'#d8d8d6'],[1,'#a9a9ab']]);glow(x,W/2,hz+H*.08,W*.6,'rgba(255,255,255,A)',.45);
+    x.fillStyle='rgba(0,0,0,.10)';x.fillRect(0,hz-2,W,4);
+  }else if(kind==='curtain'){
+    for(let xx=0;xx<W;xx++){const u=xx/W*Math.PI*2*5.2,s=.62+.28*Math.sin(u)+.10*Math.sin(u*2.7+1.3);x.fillStyle=rgb(150*s,12*s,28*s);x.fillRect(xx,0,1.5,H);}
+    lin(x,W,H,0,H*.25,[[0,'rgba(0,0,0,.6)'],[1,'rgba(0,0,0,0)']]);
+    band(x,W,hz,H,[[0,'#3a2216'],[1,'#150d08']]);glow(x,W/2,hz*.5,W*.8,'rgba(255,200,150,A)',.22);
+  }else if(kind==='kente'){
+    const pal=['#f2b705','#c1121f','#0b6e4f','#111111','#1d4e89','#f4f1e6'],n=14,sw=W/n,sq=Math.max(3,W/60);
+    for(let i=0;i<n;i++){const a=pal[i%5],b=pal[(i*2+1)%6],type=(i*7)%4;
+      x.fillStyle=a;x.fillRect(i*sw,0,sw+1,H);
+      if(type===1||type===3){for(let yy=0;yy<H;yy+=sq*2)for(let xx=0;xx<sw;xx+=sq*2){x.fillStyle=b;x.fillRect(i*sw+xx+((yy/sq/2|0)%2)*sq,yy,sq,sq);}}
+      if(type===2){x.fillStyle=b;for(let yy=0;yy<H;yy+=sq*6){x.fillRect(i*sw+sw*.2,yy,sw*.6,sq*2);}}
+      x.fillStyle='rgba(0,0,0,.55)';x.fillRect(i*sw,0,Math.max(2,sw*.05),H);}
+    for(let yy=0;yy<H;yy+=sq){x.fillStyle=`rgba(0,0,0,${(.05+.05*Math.sin(yy))})`;x.fillRect(0,yy,W,1);}
+    glow(x,W/2,H*.4,W*.8,'rgba(255,255,255,A)',.10);
+  }else if(kind==='room'){
+    lin(x,W,H,0,hz,[[0,'#efe6d6'],[1,'#e1d4bd']]);
+    // window with light
+    const wx=W*.12,wy=hz*.12,ww=W*.34,wh=hz*.55;x.fillStyle='#8fbfe8';x.fillRect(wx,wy,ww,wh);glow(x,wx+ww/2,wy+wh/2,ww*1.2,'rgba(255,255,230,A)',.55);
+    x.strokeStyle='#f7f3ea';x.lineWidth=W*.012;x.strokeRect(wx,wy,ww,wh);x.beginPath();x.moveTo(wx+ww/2,wy);x.lineTo(wx+ww/2,wy+wh);x.moveTo(wx,wy+wh/2);x.lineTo(wx+ww,wy+wh/2);x.stroke();
+    // framed picture
+    x.fillStyle='#6b4a2f';x.fillRect(W*.62,hz*.18,W*.22,hz*.28);x.fillStyle='#d9a066';x.fillRect(W*.635,hz*.205,W*.19,hz*.23);glow(x,W*.73,hz*.32,W*.1,'rgba(255,255,255,A)',.35);
+    // plant
+    x.fillStyle='#9a5b3a';x.fillRect(W*.84,hz*.82,W*.1,hz*.18);for(let i=0;i<7;i++)leaf(x,W*.89,hz*.82,H*(.14+R()*.1),W*.03,(R()-.5)*1.6,'#2f7a3e','rgba(0,40,10,.3)');
+    x.fillStyle='rgba(60,40,25,.5)';x.fillRect(0,hz-H*.012,W,H*.012);
+    band(x,W,hz,H,[[0,'#a9774a'],[1,'#6e4727']]);
+    for(let i=0;i<22;i++){x.fillStyle='rgba(40,22,8,.35)';x.fillRect(0,hz+(H-hz)*Math.pow(i/22,1.4),W,Math.max(1,H*.0015));}
+  }else{lin(x,W,H,0,H,[[0,'#ddd'],[1,'#999']]);}
+  return cv;
+}
+/* the user's own environment pictures, kept in the browser's database */
+const envCanvas=id=>{const e=S.envs.find(v=>v.id===id);return e?e.canvas:null;};
+let bdCache={key:'',cv:null};
+function backdropFor(W,H,c,foot){
+  const k=[c.bgmode,c.bg,c.gi,c.g1,c.g2,c.si,c.bgblur,S.envId,W,H,Math.round((foot==null?.82:foot)*50)].join('|');
+  if(bdCache.key===k)return bdCache.cv;
+  let cv=newCanvas(W,H),x=cv.getContext('2d');
+  if(c.bgmode==='grad'){
+    const g=GRADS[c.gi]||GRADS[0],custom=g[1]==='',c1=custom?c.g1:g[1],c2=custom?c.g2:g[2],kind=g[3];
+    let gr;
+    if(kind==='r')gr=x.createRadialGradient(W/2,H*.42,0,W/2,H*.42,Math.hypot(W/2,H*.62));else gr=x.createLinearGradient(0,0,0,H);
+    gr.addColorStop(0,c1);gr.addColorStop(1,c2);x.fillStyle=gr;x.fillRect(0,0,W,H);
+  }else if(c.bgmode==='scene'){
+    const sel=c.si||'b0';let user=sel[0]==='u'?envCanvas(+sel.slice(1)):null;
+    if(user){const sc=Math.max(W/user.width,H/user.height),dw=user.width*sc,dh=user.height*sc;x.drawImage(user,(W-dw)/2,(H-dh)/2,dw,dh);}
+    else cv=drawScene((SCENES[+sel.slice(1)]||SCENES[0])[1],W,H,foot);
+    if(c.bgblur>0)cv=softBlur(cv,c.bgblur*.5);
+  }else{x.fillStyle=c.bg;x.fillRect(0,0,W,H);}
+  bdCache={key:k,cv};return cv;
+}
+
+/* ---------------------------------------------------------------- render pipeline */
+function hex2rgb(h){const v=parseInt(h.slice(1),16);return [(v>>16)&255,(v>>8)&255,v&255];}
+function sampleMask(mk,fw,fh,g,W,H){
+  const out=new Float32Array(W*H),kx=mk.w/fw,ky=mk.h/fh,mw=mk.w,mh=mk.h,d=mk.data;
+  for(let j=0;j<H;j++){const fy=g.sy+(j+.5)/H*g.ch,v=fy*ky-.5;
+    for(let i=0;i<W;i++){const fx=g.sx+(i+.5)/W*g.cw,u=fx*kx-.5;
+      if(u<-.5||v<-.5||u>mw-.5||v>mh-.5){out[j*W+i]=0;continue;}
+      const x0=Math.floor(u),y0=Math.floor(v),tx=u-x0,ty=v-y0,
+        xa=clamp(x0,0,mw-1),xb=clamp(x0+1,0,mw-1),ya=clamp(y0,0,mh-1),yb=clamp(y0+1,0,mh-1);
+      out[j*W+i]=(d[ya*mw+xa]*(1-tx)+d[ya*mw+xb]*tx)*(1-ty)+(d[yb*mw+xa]*(1-tx)+d[yb*mw+xb]*tx)*ty;}}
+  return out;
+}
+const cellPx=(pw,ph)=>{const k=Math.min(MM,PROC_MAX/Math.max(pw,ph));return {W:Math.round(pw*k),H:Math.round(ph*k)};};
+/* stage 1: crop, resample mask, guided refinement (changes only when framing/mask/size change) */
+function stage1(){
+  const c=cfg(),F=S.frame,{W,H}=cellPx(c.pw,c.ph);S.cell={w:W,h:H};
+  const g=geomFor(F.width,F.height,c);
+  const cv=newCanvas(W,H),x=cv.getContext('2d',{willReadFrequently:true});
+  x.imageSmoothingQuality='high';
+  if(c.bgmode==='orig'&&(g.sx<-.5||g.sy<-.5||g.sx+g.cw>F.width+.5||g.sy+g.ch>F.height+.5)){ // margins: a blurred, enlarged copy of the picture fills them
+    const sc=Math.max(W/F.width,H/F.height),u=newCanvas(Math.round(W/4),Math.round(H/4)),ux=u.getContext('2d');
+    ux.drawImage(F,(u.width-F.width*sc/4)/2,(u.height-F.height*sc/4)/2,F.width*sc/4,F.height*sc/4);
+    x.drawImage(softBlur(u,70),0,0,W,H);x.fillStyle='rgba(0,0,0,.18)';x.fillRect(0,0,W,H);
+  }
+  x.drawImage(F,g.sx,g.sy,g.cw,g.ch,0,0,W,H);
+  const rgba=x.getImageData(0,0,W,H).data,n=W*H,I=new Float32Array(n);
+  for(let i=0;i<n;i++)I[i]=(.299*rgba[4*i]+.587*rgba[4*i+1]+.114*rgba[4*i+2])/255;
+  const p=sampleMask(S.mask||{w:1,h:1,data:new Float32Array([1])},F.width,F.height,g,W,H);
+  const q=guidedFilter(I,p,W,H,Math.max(2,Math.round(W*.006)),0.0004);
+  S.cache={W,H,rgba,q,key:keyOf(c)};
+  // where the shoes meet the floor, for the shadow and the floor line of scenes
+  const bb=ensureBBox();S.foot=bb?clamp(((bb.bot*F.height)-g.sy)/g.ch,0,1.5):null;
+}
+function keyOf(c){return [c.pw,c.ph,c.zoom,c.ox,c.oy,c.bgmode==='orig',c.whole,S.frame&&S.frame.width,S.maskId].join('|');}
+/* stage 2: shape the alpha, clean edge colours, enhance, composite onto the backdrop */
+function stage2(){
+  const c=cfg(),{W,H,rgba,q}=S.cache,n=W*H,orig=c.bgmode==='orig';
+  const s=c.trim/50*.30,wd=.15+c.soft/100*.85,a=new Float32Array(n);
+  if(orig)a.fill(1);else for(let i=0;i<n;i++)a[i]=clamp((q[i]-(.5+s))/wd+.5,0,1);
+  S.alphaFinal=a;
+  const R=new Float32Array(n),G=new Float32Array(n),B=new Float32Array(n),core=new Float32Array(n);
+  for(let i=0;i<n;i++){R[i]=rgba[4*i];G[i]=rgba[4*i+1];B[i]=rgba[4*i+2];core[i]=a[i]>.97?1:0;}
+  if(!orig){
+    // pull edge colours from the inside of the subject to remove the old-background rim
+    const dn=boxBlur(core,W,H,2),inner=new Float32Array(n);
+    for(let i=0;i<n;i++)inner[i]=dn[i]>.995?1:0;
+    const rr=Math.max(3,Math.round(W*.008)),
+      bc=boxBlur(boxBlur(inner,W,H,rr),W,H,rr),
+      pr=new Float32Array(n),pg=new Float32Array(n),pb=new Float32Array(n);
+    for(let i=0;i<n;i++){pr[i]=R[i]*inner[i];pg[i]=G[i]*inner[i];pb[i]=B[i]*inner[i];}
+    const br=boxBlur(boxBlur(pr,W,H,rr),W,H,rr),bg=boxBlur(boxBlur(pg,W,H,rr),W,H,rr),bb=boxBlur(boxBlur(pb,W,H,rr),W,H,rr);
+    for(let i=0;i<n;i++){const k=Math.max(Math.min(1,(1-a[i])*1.5),Math.min(1,clamp(1-dn[i],0,1)*2.4));
+      if(k>0.001&&bc[i]>.02&&a[i]>0){R[i]=R[i]*(1-k)+br[i]/bc[i]*k;G[i]=G[i]*(1-k)+bg[i]/bc[i]*k;B[i]=B[i]*(1-k)+bb[i]/bc[i]*k;}}
+  }
+  // exposure statistics from the subject only
+  const hist=new Uint32Array(256);let tot=0;
+  for(let i=0;i<n;i++)if(a[i]>.9){hist[clamp(Math.round(.299*R[i]+.587*G[i]+.114*B[i]),0,255)]++;tot++;}
+  const pct=f=>{let acc=0,t=tot*f;for(let v=0;v<256;v++){acc+=hist[v];if(acc>=t)return v;}return 255;};
+  const lut=new Float32Array(256);
+  let lo=0,hi=255,gam=1;
+  if(c.auto&&tot>500){lo=pct(.02);hi=Math.max(lo+40,pct(.98));}
+  for(let v=0;v<256;v++){
+    let o=v;
+    if(c.auto&&tot>500){const st=8+clamp((v-lo)/(hi-lo),0,1)*(247-8);o=v+(st-v)*.55;}
+    lut[v]=o;
+  }
+  if(c.auto&&tot>500){ // gentle gamma so the subject's median lands near mid-bright
+    let acc=0,med=128;for(let v=0;v<256;v++){acc+=hist[v];if(acc>=tot*.5){med=lut[v];break;}}
+    const g0=Math.log(.5)/Math.log(clamp(med,20,235)/255);gam=1+(clamp(g0,.78,1.3)-1)*.5;
+  }
+  const bri=c.bri*1.2,cs=1+c.con/100,sat=1+c.sat/100,wm=c.warm/100*.10;
+  for(let v=0;v<256;v++){let o=255*Math.pow(clamp(lut[v],0,255)/255,gam);o+=bri;o=(o-128)*cs+128;lut[v]=clamp(o,0,255);}
+  for(let i=0;i<n;i++){R[i]=lut[clamp(Math.round(R[i]),0,255)];G[i]=lut[clamp(Math.round(G[i]),0,255)];B[i]=lut[clamp(Math.round(B[i]),0,255)];
+    const L=.299*R[i]+.587*G[i]+.114*B[i];R[i]=L+(R[i]-L)*sat;G[i]=L+(G[i]-L)*sat;B[i]=L+(B[i]-L)*sat;
+    if(wm){R[i]*=1+wm;B[i]*=1-wm;}}
+  if(c.shp>0){const am=c.shp/100*.9,r1=boxBlur(R,W,H,1),g1=boxBlur(G,W,H,1),b1=boxBlur(B,W,H,1);
+    for(let i=0;i<n;i++){R[i]+=am*(R[i]-r1[i]);G[i]+=am*(G[i]-g1[i]);B[i]+=am*(B[i]-b1[i]);}}
+  // backdrop (with the floor shadow under the shoes)
+  const cv=S.result||(S.result=document.createElement('canvas'));cv.width=W;cv.height=H;const x=cv.getContext('2d'),im=x.createImageData(W,H),o=im.data;
+  if(orig){
+    for(let i=0;i<n;i++){o[4*i]=clamp(R[i],0,255);o[4*i+1]=clamp(G[i],0,255);o[4*i+2]=clamp(B[i],0,255);o[4*i+3]=255;}
+  }else{
+    const bd=newCanvas(W,H),bx=bd.getContext('2d',{willReadFrequently:true});bx.drawImage(backdropFor(W,H,c,S.foot),0,0);
+    const sh=floorShadowSpec(a,W,H);
+    if(sh&&c.shad>0){
+      const al=c.shad/100*.55;bx.save();bx.translate(sh.cx,sh.cy);bx.scale(1,sh.ry/sh.rx);
+      const gr=bx.createRadialGradient(0,0,0,0,0,sh.rx);gr.addColorStop(0,`rgba(0,0,0,${al})`);gr.addColorStop(.55,`rgba(0,0,0,${al*.55})`);gr.addColorStop(1,'rgba(0,0,0,0)');
+      bx.fillStyle=gr;bx.beginPath();bx.arc(0,0,sh.rx,0,Math.PI*2);bx.fill();bx.restore();}
+    const bdd=bx.getImageData(0,0,W,H).data;
+    for(let i=0;i<n;i++){const al=a[i],k=1-al;
+      o[4*i]=clamp(R[i]*al+bdd[4*i]*k,0,255);o[4*i+1]=clamp(G[i]*al+bdd[4*i+1]*k,0,255);o[4*i+2]=clamp(B[i]*al+bdd[4*i+2]*k,0,255);o[4*i+3]=255;}
+  }
+  x.putImageData(im,0,0);
+}
+/* where the person stands (cell pixels): centre, half-width and floor line, from the final alpha */
+function floorShadowSpec(a,W,H){
+  const rt=Math.max(3,W*.004);let yb=-1;
+  for(let y=H-1;y>=0&&yb<0;y--){let c=0;for(let x=0;x<W;x++)if(a[y*W+x]>.5)c++;if(c>=rt)yb=y;}
+  if(yb<0||yb>H-4)return null;                       // no feet visible: no shadow
+  let minx=W,maxx=0;const y0=Math.max(0,yb-Math.round(H*.035));
+  for(let y=y0;y<=yb;y++)for(let x=0;x<W;x++)if(a[y*W+x]>.5){if(x<minx)minx=x;if(x>maxx)maxx=x;}
+  if(maxx<=minx)return null;
+  const hw=(maxx-minx)/2,rx=hw*1.25+W*.03;
+  return {cx:(minx+maxx)/2,cy:yb-rx*.04,rx,ry:Math.max(6,rx*.17)};
+}
+/* queue a render: level 1 = full, 2 = from alpha shaping and backdrop */
+function queue(level){
+  S.q.stage=S.q.stage?Math.min(S.q.stage,level):level;
+  if(S.q.raf)return;
+  S.q.raf=requestAnimationFrame(()=>{
+    S.q.raf=0;const lv=S.q.stage;S.q.stage=0;
+    if(S.frame&&S.mask){
+      try{if(!S.cache||lv===1||S.cache.key!==keyOf(cfg()))stage1();stage2();framingWarnings();}catch(e){console.error(e);}
+    }
+    updateSheet();
+  });
+}
+
+/* ---------------------------------------------------------------- sheet */
+function buildSheet(label){
+  const L=layoutFor(),n=L.n;
+  const W=Math.round(L.sw*MM),H=Math.round(L.sh*MM);
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,W,H);x.imageSmoothingQuality='high';
+  if(!S.result||!L.max)return cv;
+  if(L.fill){x.drawImage(S.result,0,0,W,H);return cv;}
+  const cols=arrange(n,L),rows=Math.ceil(n/cols),pw=Math.round(L.pw*MM),ph=Math.round(L.ph*MM),gap=Math.round(GAP*MM);
+  const tw=cols*pw+(cols-1)*gap,th=rows*ph+(rows-1)*gap,x0=Math.round((W-tw)/2),y0=Math.round((H-th)/2);
+  for(let k=0;k<n;k++){const cx=x0+(k%cols)*(pw+gap),cy=y0+Math.floor(k/cols)*(ph+gap);
+    x.drawImage(S.result,cx,cy,pw,ph);
+    if($('cut').checked&&n>1){x.strokeStyle='#c4c4c4';x.lineWidth=1;x.strokeRect(cx-.5,cy-.5,pw+1,ph+1);}}
+  if(label){const yb=y0+th;if(H-yb>=Math.round(10*MM)){x.fillStyle='#8a8a8a';x.font=Math.round(2.4*MM)+'px Arial';x.textAlign='center';x.fillText(label,W/2,yb+Math.round(7*MM));}}
+  return cv;
+}
+function updateSheet(){
+  const L=layoutFor(),v=$('sheetView'),W=Math.round(L.sw*MM),H=Math.round(L.sh*MM);
+  const sc=Math.min(1,520/Math.max(W,H));v.width=Math.round(W*sc);v.height=Math.round(H*sc);
+  const x=v.getContext('2d');x.imageSmoothingQuality='high';
+  if(!S.result){x.fillStyle='#fff';x.fillRect(0,0,v.width,v.height);x.fillStyle='#aab';x.font='13px Segoe UI,Arial';x.textAlign='center';x.fillText('Your sheet will appear here',v.width/2,v.height/2);return;}
+  x.drawImage(buildSheet(),0,0,v.width,v.height);
+}
+
+/* ---------------------------------------------------------------- output */
+function patchJpegDpi(buf){
+  const b=new Uint8Array(buf);
+  if(b[0]===0xFF&&b[1]===0xD8&&b[2]===0xFF&&b[3]===0xE0&&b[6]===0x4A&&b[7]===0x46&&b[8]===0x49&&b[9]===0x46){b[13]=1;b[14]=1;b[15]=0x2C;b[16]=1;b[17]=0x2C;}
+  return b;
+}
+function stamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds());}
+function saveCanvas(cv,name){
+  cv.toBlob(async blob=>{const buf=await blob.arrayBuffer(),out=patchJpegDpi(buf),a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([out],{type:'image/jpeg'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);},'image/jpeg',.95);
+}
+$('btnSaveSheet').onclick=()=>window.saveAllowed&&!window.saveAllowed()?0:saveCanvas(buildSheet(),'FullBodySheet_'+stamp()+'.jpg');
+$('btnSaveOne').onclick=()=>{if(S.result&&(!window.saveAllowed||window.saveAllowed()))saveCanvas(S.result,'FullBodyPhoto_'+stamp()+'.jpg');};
+function todayKey(){const d=new Date();return 'fbs_'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function getCount(){try{return +localStorage.getItem(todayKey())||0;}catch(e){return 0;}}
+function bumpCount(n){try{localStorage.setItem(todayKey(),getCount()+(n||1));}catch(e){}showCount();}
+function showCount(){if(typeof CFG!=='undefined'&&CFG.sales){refreshToday();return;}$('count').textContent='Sheets printed today on this computer: '+getCount();}
+/* prints `sheets` copies of the sheet, one per page */
+async function sendToPrinter(cv,sheets){
+  const L=layoutFor(),pa=$('printArea'),url=cv.toDataURL('image/png'),k=Math.max(1,Math.min(20,sheets||1));
+  $('printStyle').textContent=`@page{size:${L.sw}mm ${L.sh}mm;margin:0}@media print{html,body{height:auto;overflow:visible;background:#fff}body>*:not(#printArea){display:none!important}#printArea{display:block!important}#printArea img{display:block;width:${L.sw}mm;height:${L.sh}mm;margin:0;break-after:page;page-break-after:always}#printArea img:last-child{break-after:auto;page-break-after:auto}}`;
+  pa.innerHTML='';const imgs=[];
+  for(let i=0;i<k;i++){const img=document.createElement('img');img.alt='';img.src=url;pa.appendChild(img);imgs.push(img);}
+  try{await Promise.all(imgs.map(i=>i.decode()));}catch(e){}
+  window.print();
+}
+$('btnPrint').onclick=async()=>{await sendToPrinter(buildSheet(),layoutFor().sheets);bumpCount(layoutFor().sheets);};
+
+/* ---------------------------------------------------------------- stage drawing */
+const stage=$('stage'),sctx=stage.getContext('2d');
+function fitStage(){const r=stageWrap.getBoundingClientRect(),d=Math.min(2,window.devicePixelRatio||1);stage.width=Math.max(10,Math.round(r.width*d));stage.height=Math.max(10,Math.round(r.height*d));}
+new ResizeObserver(fitStage).observe(stageWrap);
+function setTabs(){const t=$('viewTabs');t.style.display=S.mode==='shot'?'flex':'none';[...t.children].forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));}
+$('viewTabs').onclick=e=>{const v=e.target.dataset&&e.target.dataset.v;if(v){S.view=v;setTabs();}};
+/* only the Original tab shows where the print crop falls; the live view has no frame at all */
+function overlay(ctx,g,lw){
+  ctx.save();ctx.fillStyle='rgba(0,0,0,.5)';ctx.beginPath();
+  ctx.rect(-1e5,-1e5,2e5,2e5);ctx.rect(g.sx,g.sy,g.cw,g.ch);ctx.fill('evenodd');
+  ctx.strokeStyle='#d4a017';ctx.lineWidth=lw*2;ctx.strokeRect(g.sx,g.sy,g.cw,g.ch);ctx.restore();
+}
+function drawStage(){
+  const W=stage.width,H=stage.height,x=sctx;x.setTransform(1,0,0,1,0,0);x.fillStyle='#070b13';x.fillRect(0,0,W,H);
+  x.imageSmoothingQuality='high';
+  const fitDraw=(src,sw,sh,pad)=>{const sc=Math.min((W-2*pad)/sw,(H-2*pad)/sh),dw=sw*sc,dh=sh*sc,dx=(W-dw)/2,dy=(H-dh)/2;return {sc,dx,dy,dw,dh};};
+  if(S.mode==='live'){
+    const v=S.video;
+    if(S.stream&&v.readyState>=2&&v.videoWidth){
+      const vw=v.videoWidth,vh=v.videoHeight,f=fitDraw(v,vw,vh,0);
+      x.save();x.translate(f.dx,f.dy);x.scale(f.sc,f.sc);
+      if($('mirror').checked){x.translate(vw,0);x.scale(-1,1);}
+      x.drawImage(v,0,0,vw,vh);x.restore();
+      if(S.count>0){x.fillStyle='rgba(0,0,0,.35)';x.fillRect(0,0,W,H);x.fillStyle='#fff';x.font='700 '+Math.round(H*.34)+'px Segoe UI,Arial';x.textAlign='center';x.textBaseline='middle';x.fillText(S.count,W/2,H/2);}
+    }else{
+      x.fillStyle='#98a3b8';x.font=Math.round(H*.035)+'px Segoe UI,Arial';x.textAlign='center';x.fillText('Waiting for the camera…  (or use "Use a photo from file…")',W/2,H/2);
+    }
+  }else if(S.frame){
+    if(S.view==='original'){
+      const F=S.frame,f=fitDraw(F,F.width,F.height,8);x.save();x.translate(f.dx,f.dy);x.scale(f.sc,f.sc);x.drawImage(F,0,0);overlay(x,geomFor(F.width,F.height,cfg()),1/f.sc);x.restore();
+    }else if(S.result){
+      const f=fitDraw(S.result,S.result.width,S.result.height,Math.round(H*.04));
+      if(S.view==='mask'&&S.alphaFinal){
+        const {W:cw,H:ch}=S.cache,m=document.createElement('canvas');m.width=cw;m.height=ch;const mx=m.getContext('2d'),im=mx.createImageData(cw,ch);
+        for(let i=0;i<cw*ch;i++){const v=S.alphaFinal[i]*255;im.data[4*i]=im.data[4*i+1]=im.data[4*i+2]=v;im.data[4*i+3]=255;}mx.putImageData(im,0,0);
+        x.drawImage(m,f.dx,f.dy,f.dw,f.dh);
+      }else x.drawImage(S.result,f.dx,f.dy,f.dw,f.dh);
+      x.strokeStyle='#26324d';x.lineWidth=2;x.strokeRect(f.dx-1,f.dy-1,f.dw+2,f.dh+2);
+    }
+  }
+  if(S.flash>0){x.fillStyle='rgba(255,255,255,'+S.flash+')';x.fillRect(0,0,W,H);S.flash=Math.max(0,S.flash-.08);}
+}
+(function loop(){drawStage();requestAnimationFrame(loop);})();
+setInterval(()=>{ // keep the note in sync with the latest cut-out result
+  if(S.mode==='shot'&&S.mask){
+    const repl=S.bgmode!=='orig',bits=[];if(repl&&S.warn)bits.push(S.warn);if(S.fwarn)bits.push(S.fwarn);
+    if(bits.length)note(bits.join('  '),true);
+    else note((repl?(S.used==='ai'?'Cut-out: AI':'Cut-out: plain-backdrop mode'):'Scene kept as photographed')+(S.dpi?`  ·  about ${Math.round(S.dpi)} dpi at this size`:''),false);
+  }
+},700);
+
+/* ---------------------------------------------------------------- wiring */
+function syncOut(){document.querySelectorAll('.row').forEach(r=>{const i=r.querySelector('input'),o=r.querySelector('output');if(!i||!o)return;
+  o.textContent=i.id==='zoom'?(i.value/100).toFixed(2)+'×':i.value;});}
+['zoom','ox','oy'].forEach(id=>$(id).oninput=()=>{syncOut();queue(1);});
+$('fill').oninput=()=>{syncOut();if(S.frame&&$('autofit').checked){autoFit(false);}};
+$('whole').onchange=()=>{if(S.frame){autoFit(false);}};
+$('orientSeg').onclick=e=>{const o=e.target.dataset&&e.target.dataset.o;if(!o)return;S.orient=o;[...$('orientSeg').children].forEach(b=>b.classList.toggle('on',b.dataset.o===o));
+  if(o==='auto'){S.autoLand=false;}layoutChanged();if(S.frame)autoFit(false);};
+['bri','con','sat','warm','shp','trim','soft','shad','bgblur'].forEach(id=>$(id).oninput=()=>{syncOut();queue(2);});
+$('autolevel').onchange=()=>queue(2);
+$('cut').onchange=()=>updateSheet();
+$('copies').onchange=()=>{S.want=+$('copies').value;updateSheet();};
+$('paper').onchange=()=>{layoutChanged();if(S.frame&&$('autofit').checked)autoFit(true);queue(1);};
+$('psize').onchange=()=>{layoutChanged();if(S.frame&&$('autofit').checked)autoFit(true);queue(1);};
+$('nsheets').onchange=()=>{updatePrintBtn();};
+['cw','ch'].forEach(id=>$(id).onchange=()=>{layoutChanged();});
+$('btnAuto').onclick=()=>autoFit(false);
+/* environment mode */
+function setBgMode(m){
+  S.bgmode=m;
+  [...$('bgMode').children].forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  $('bgSolid').style.display=m==='solid'?'':'none';$('bgGrad').style.display=m==='grad'?'':'none';$('bgScene').style.display=m==='scene'?'':'none';
+  $('bgOrigNote').style.display=m==='orig'?'':'none';$('shadRow').style.display=m==='orig'?'none':'';$('cutBox').style.display=m==='orig'?'none':'';
+  if(m==='scene')buildSceneGrid();
+  if(S.frame){if($('autofit').checked)autoFit(true);queue(1);}else queue(2);
+}
+$('bgMode').onclick=e=>{const m=e.target.dataset&&e.target.dataset.m;if(m)setBgMode(m);};
+$('gradSel').onchange=()=>{$('gradCustom').style.display=GRADS[val('gradSel')][1]===''?'flex':'none';queue(2);};
+['g1','g2'].forEach(id=>$(id).oninput=()=>queue(2));
+/* environment picker: thumbnails of the built-in environments plus the user's own pictures */
+const sceneThumbs={};
+function sceneThumb(i){if(sceneThumbs[i])return sceneThumbs[i];const c=drawScene(SCENES[i][1],96,128,.82);sceneThumbs[i]=c;return c;}
+function buildSceneGrid(){
+  const g=$('sceneGrid');g.innerHTML='';
+  const add=(sel,name,src,del)=>{
+    const b=document.createElement('button');b.className='env'+(S.sceneSel===sel?' on':'');b.title=name;
+    const c=document.createElement('canvas');c.width=72;c.height=96;const cx=c.getContext('2d');cx.imageSmoothingQuality='high';
+    const sc=Math.max(72/src.width,96/src.height);cx.drawImage(src,(72-src.width*sc)/2,(96-src.height*sc)/2,src.width*sc,src.height*sc);b.appendChild(c);
+    const l=document.createElement('span');l.textContent=name;b.appendChild(l);
+    b.onclick=()=>{S.sceneSel=sel;S.envId++;buildSceneGrid();queue(2);};
+    if(del){const x=document.createElement('i');x.textContent='✕';x.title='Remove this picture';x.onclick=e=>{e.stopPropagation();envDelete(del);};b.appendChild(x);}
+    g.appendChild(b);};
+  SCENES.forEach((s,i)=>add('b'+i,s[0],sceneThumb(i),0));
+  S.envs.forEach(e=>add('u'+e.id,e.name,e.canvas,e.id));
+}
+async function envLoad(){
+  try{const db=await idb(),all=await new Promise(res=>{const out=[],cur=db.transaction('envs').objectStore('envs').openCursor();cur.onsuccess=()=>{const c=cur.result;if(c){out.push(c.value);c.continue();}else res(out);};cur.onerror=()=>res(out);});
+    for(const v of all.sort((a,b)=>a.id-b.id)){const img=new Image();img.src=v.url;try{await img.decode();}catch(e){continue;}const c=newCanvas(img.naturalWidth,img.naturalHeight);c.getContext('2d').drawImage(img,0,0);S.envs.push({id:v.id,name:v.name,canvas:c});S.envId=Math.max(S.envId,v.id);}
+    if(S.bgmode==='scene')buildSceneGrid();}catch(e){}
+}
+async function envAdd(files){
+  for(const f of files){
+    try{const bmp=await createImageBitmap(f,{imageOrientation:'from-image'}),sc=Math.min(1,1800/Math.max(bmp.width,bmp.height)),c=newCanvas(Math.round(bmp.width*sc),Math.round(bmp.height*sc));
+      c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+      const id=Date.now()+Math.floor(Math.random()*1000),name=(f.name||'Picture').replace(/\.[^.]+$/,'').slice(0,18);
+      S.envs.push({id,name,canvas:c});S.sceneSel='u'+id;S.envId++;
+      try{const db=await idb();db.transaction('envs','readwrite').objectStore('envs').put({id,name,url:c.toDataURL('image/jpeg',.88)},id);}catch(e){note('The picture is used now but could not be saved for next time.',true);}
+    }catch(err){note('That file could not be opened as a picture.',true);}
+  }
+  buildSceneGrid();queue(2);
+}
+async function envDelete(id){
+  S.envs=S.envs.filter(e=>e.id!==id);if(S.sceneSel==='u'+id)S.sceneSel='b0';S.envId++;
+  try{const db=await idb();db.transaction('envs','readwrite').objectStore('envs').delete(id);}catch(e){}
+  buildSceneGrid();queue(2);
+}
+$('btnPic').onclick=()=>$('picFile').click();
+$('picFile').onchange=e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)envAdd(fs);};
+let sensT=0;
+$('sens').oninput=()=>{syncOut();clearTimeout(sensT);sensT=setTimeout(()=>{
+  if(S.frame&&S.used==='plain'&&S.plainCache){S.mask=plainMask(val('sens'));S.maskId=(S.maskId||0)+1;queue(1);}},120);};
+$('method').onchange=async()=>{
+  if($('method').value!=='plain'&&(S.ai.state==='idle'||S.ai.state==='failed'))await loadAI();
+  if(S.frame){note('Cutting out the background…');await nextFrame();await makeMask();S.maskId=(S.maskId||0)+1;if($('autofit').checked)autoFit(true);queue(1);}
+};
+window.addEventListener('beforeunload',stopCam);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.mode==='live'&&(!S.stream||!S.stream.active))startCam();});
+
+/* ================================================================ SALES TRACKING (worker / owner) */
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}};
+const pad2=n=>String(n).padStart(2,'0');
+const dstr=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+const todayStr=()=>dstr(new Date());
+const dayOf=iso=>dstr(new Date(iso));
+const timeOf=iso=>{const d=new Date(iso);return pad2(d.getHours())+':'+pad2(d.getMinutes());};
+
+/* ---- SHA-256 (small, synchronous; used to make the log tamper-evident and to store the PIN as a hash) */
+const SHA={K:null,H:null};
+function sha256(msg){
+  if(!SHA.K){const pr=[];for(let n=2;pr.length<64;n++){let ok=true;for(const p of pr){if(p*p>n)break;if(n%p===0){ok=false;break;}}if(ok)pr.push(n);}
+    SHA.K=pr.map(p=>Math.floor((Math.cbrt(p)%1)*4294967296)>>>0);SHA.H=pr.slice(0,8).map(p=>Math.floor((Math.sqrt(p)%1)*4294967296)>>>0);}
+  const bytes=new TextEncoder().encode(msg),l=bytes.length,total=((l+9+63)>>6)<<6,buf=new Uint8Array(total);
+  buf.set(bytes);buf[l]=0x80;const dv=new DataView(buf.buffer);dv.setUint32(total-8,Math.floor(l*8/4294967296));dv.setUint32(total-4,(l*8)>>>0);
+  const H=SHA.H.slice(),K=SHA.K,w=new Uint32Array(64),rotr=(x,n)=>(x>>>n)|(x<<(32-n));
+  for(let o=0;o<total;o+=64){
+    for(let i=0;i<16;i++)w[i]=dv.getUint32(o+4*i);
+    for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2],s0=rotr(a,7)^rotr(a,18)^(a>>>3),s1=rotr(b,17)^rotr(b,19)^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}
+    let [a,b,c,d,e,f,g,h]=H;
+    for(let i=0;i<64;i++){const S1=rotr(e,6)^rotr(e,11)^rotr(e,25),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[i]+w[i])>>>0,S0=rotr(a,2)^rotr(a,13)^rotr(a,22),mj=(a&b)^(a&c)^(b&c),t2=(S0+mj)>>>0;
+      h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;}
+    H[0]=(H[0]+a)>>>0;H[1]=(H[1]+b)>>>0;H[2]=(H[2]+c)>>>0;H[3]=(H[3]+d)>>>0;H[4]=(H[4]+e)>>>0;H[5]=(H[5]+f)>>>0;H[6]=(H[6]+g)>>>0;H[7]=(H[7]+h)>>>0;
+  }
+  return H.map(x=>x.toString(16).padStart(8,'0')).join('');
+}
+
+/* ---- settings */
+const CFGK='fbs_cfg_v1',LOGK='fbs_log_v1',HEADK='fbs_head_v1';
+const DEFAULT_PACKAGES=()=>[{id:'p1',name:'Postcard print (1 sheet)',size:0,paper:0,copies:1,sheets:1,price:20},{id:'p2',name:'Two postcard prints',size:0,paper:0,copies:1,sheets:2,price:30},{id:'p3',name:'Mini set (4 small prints on one card)',size:6,paper:0,copies:4,sheets:1,price:15}];
+const defCfg=()=>({sales:false,currency:'GH₵',packages:DEFAULT_PACKAGES(),workers:[],pinHash:'',salt:Math.random().toString(36).slice(2)+Date.now().toString(36),wa:'',allowSave:false,thumbDays:30,closePin:false});
+let CFG=Object.assign(defCfg(),LS.get(CFGK,{}));
+if(!Array.isArray(CFG.packages)||!CFG.packages.length)CFG.packages=DEFAULT_PACKAGES();
+function saveCfg(){return LS.set(CFGK,CFG);}
+saveCfg();
+const money=n=>CFG.currency+(+n).toFixed(2);
+S.owner=false;
+try{S.worker=sessionStorage.getItem('fbs_worker')||'';}catch(e){S.worker='';}
+
+/* ---- the log: every action is one entry; each entry carries the hash of the one before it */
+const getLog=()=>LS.get(LOGK,[]);
+function logAdd(ty,data,who){
+  const L=getLog(),prev=L.length?L[L.length-1].h:'GENESIS-'+CFG.salt;
+  const e=Object.assign({n:L.length+1,t:new Date().toISOString(),w:who!==undefined?who:(S.worker||''),ty},data||{},{p:prev});
+  e.h=sha256(JSON.stringify(e));L.push(e);
+  if(!LS.set(LOGK,L)||!LS.set(HEADK,{n:e.n,h:e.h}))note('WARNING: the sales record could not be saved (browser storage is full or blocked).',true);
+  refreshToday();return e;
+}
+function verifyLog(){
+  const L=getLog();let prev='GENESIS-'+CFG.salt;
+  for(const e of L){const {h,...rest}=e;
+    if(rest.p!==prev)return {ok:false,msg:`The record was changed: entry #${e.n} does not follow the one before it.`};
+    if(sha256(JSON.stringify(rest))!==h)return {ok:false,msg:`The record was changed: entry #${e.n} has been edited.`};
+    prev=h;}
+  const hd=LS.get(HEADK,null);
+  if(L.length&&(!hd||hd.n!==L[L.length-1].n||hd.h!==L[L.length-1].h))return {ok:false,msg:'The record looks shortened: the last entries are missing.'};
+  if(!L.length&&hd&&hd.n>0)return {ok:false,msg:'The record is empty but it used to contain entries.'};
+  return {ok:true,msg:`Record is intact (${L.length} entries).`};
+}
+
+/* ---- photo thumbnails kept in IndexedDB so the owner can see who was photographed */
+function idb(){return new Promise((res,rej)=>{try{const r=indexedDB.open('fbs',2);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('thumbs'))d.createObjectStore('thumbs');if(!d.objectStoreNames.contains('envs'))d.createObjectStore('envs');};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
+async function thumbPut(id,url){try{const db=await idb();db.transaction('thumbs','readwrite').objectStore('thumbs').put({url,t:Date.now()},id);}catch(e){}}
+async function thumbGet(id){try{const db=await idb();return await new Promise(r=>{const q=db.transaction('thumbs').objectStore('thumbs').get(id);q.onsuccess=()=>r(q.result?q.result.url:null);q.onerror=()=>r(null);});}catch(e){return null;}}
+async function thumbPrune(){try{const db=await idb(),lim=Date.now()-CFG.thumbDays*86400000,st=db.transaction('thumbs','readwrite').objectStore('thumbs'),cur=st.openCursor();
+  cur.onsuccess=()=>{const c=cur.result;if(c){if(c.value.t<lim)c.delete();c.continue();}};}catch(e){}}
+async function thumbClear(){try{const db=await idb();db.transaction('thumbs','readwrite').objectStore('thumbs').clear();}catch(e){}}
+function makeThumb(){
+  if(!S.result||!S.photoId)return;
+  const c=document.createElement('canvas');c.width=90;c.height=Math.round(90*S.result.height/S.result.width);c.getContext('2d').drawImage(S.result,0,0,c.width,c.height);
+  thumbPut(S.photoId,c.toDataURL('image/jpeg',.6));
+}
+
+/* ---- small modal helper: buttons return a value (false keeps the box open) */
+function ask(title,body,btns,opt){
+  opt=opt||{};
+  return new Promise(res=>{
+    const ov=document.createElement('div');ov.className='ov';
+    const box=document.createElement('div');box.className='mbox'+(opt.wide?' wide':'');
+    box.innerHTML='<h2>'+title+'</h2><div class="mbody">'+body+'</div><div class="mbtn"></div>';
+    const close=v=>{ov.remove();res(v);};
+    btns.forEach((b,i)=>{const e=document.createElement('button');e.className='btn '+(b.cls||'');e.textContent=b.l;
+      e.onclick=()=>{const v=b.fn?b.fn(box):i;if(v===false)return;close(v===undefined?i:v);};box.querySelector('.mbtn').appendChild(e);});
+    ov.appendChild(box);document.body.appendChild(ov);
+    const f=box.querySelector('input:not([type=checkbox]),select');if(f)f.focus();
+    box.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){const p=box.querySelector('.btn.pri');if(p)p.click();}});
+  });
+}
+const toastMsg=(m)=>note(m,false);
+
+/* ---- owner PIN */
+function verifyPin(p){return CFG.pinHash&&sha256(CFG.salt+p)===CFG.pinHash;}
+let pinFails=0,pinLock=0;
+async function gatePin(why){
+  for(;;){
+    if(Date.now()<pinLock){await ask('Locked',`<p>Too many wrong tries. Wait ${Math.ceil((pinLock-Date.now())/1000)} seconds.</p>`,[{l:'OK'}]);return false;}
+    const r=await ask('Owner PIN',`<p>${esc(why||'Enter the owner PIN.')}</p><input type="password" id="pin" inputmode="numeric" maxlength="8" autocomplete="off" style="width:100%">`,[{l:'Cancel'},{l:'OK',cls:'pri',fn:b=>b.querySelector('#pin').value||false}]);
+    if(typeof r!=='string')return false;
+    if(verifyPin(r)){pinFails=0;return true;}
+    if(++pinFails>=5){pinLock=Date.now()+60000;pinFails=0;}
+    await ask('Wrong PIN','<p>That PIN is not correct.</p>',[{l:'Try again',cls:'pri'}]);
+  }
+}
+async function setPinFlow(){
+  const r=await ask('Create an owner PIN',`<p>Choose a PIN of 4 to 8 digits. Only you should know it. It protects the sales report, prices and settings.</p>
+    <input type="password" id="p1" inputmode="numeric" maxlength="8" placeholder="New PIN" style="width:100%;margin-bottom:8px"><input type="password" id="p2" inputmode="numeric" maxlength="8" placeholder="Repeat PIN" style="width:100%"><p id="perr" class="bad"></p>`,
+    [{l:'Cancel'},{l:'Save PIN',cls:'pri',fn:b=>{const a=b.querySelector('#p1').value,c=b.querySelector('#p2').value;
+      if(!/^\d{4,8}$/.test(a)){b.querySelector('#perr').textContent='Use 4 to 8 digits.';return false;}
+      if(a!==c){b.querySelector('#perr').textContent='The two PINs are not the same.';return false;}return a;}}]);
+  if(typeof r!=='string')return false;
+  CFG.pinHash=sha256(CFG.salt+r);saveCfg();return true;
+}
+
+/* ---- owner / worker mode */
+let ownerTimer=0;
+function setOwner(on){
+  S.owner=on;clearTimeout(ownerTimer);
+  $('btnRole').textContent=on?'Owner mode (click to lock)':'Worker mode';
+  $('btnRole').style.color=on?'#d4a017':'';
+  $('btnDash').style.display=on?'':'none';
+  if(on)ownerTimer=setTimeout(()=>{setOwner(false);closeOwnerView();},10*60000);
+  refreshCopies(true);enableOut(!!S.result);updateSheet();updatePrintBtn();
+}
+$('btnRole').onclick=async()=>{
+  if(S.owner){setOwner(false);closeOwnerView();return;}
+  if(!CFG.pinHash){if(!(await setPinFlow()))return;}else if(!(await gatePin('Enter the owner PIN to switch to owner mode.')))return;
+  setOwner(true);
+};
+
+/* ---- worker session and the opening of the day */
+const sessionReady=()=>!CFG.sales||(S.worker&&dayOpen());
+function dayOpen(){const t=todayStr();let o=false;for(const e of getLog()){if(dayOf(e.t)!==t)continue;if(e.ty==='open')o=true;if(e.ty==='close')o=false;}return o;}
+function unclosedDays(){const t=todayStr(),open={};for(const e of getLog()){const d=dayOf(e.t);if(e.ty==='open')open[d]=true;if(e.ty==='close')open[d]=false;}return Object.keys(open).filter(d=>open[d]&&d<t);}
+async function askWorker(){
+  const list=CFG.workers.concat(['Owner']);
+  const body=CFG.workers.length?`<p>Who is working now?</p><select id="wk" style="width:100%">${list.map(w=>`<option>${esc(w)}</option>`).join('')}</select>`
+    :`<p>Type your name.</p><input type="text" id="wk" maxlength="30" style="width:100%">`;
+  const r=await ask('Start work',body,[{l:'Cancel'},{l:'Start',cls:'pri',fn:b=>b.querySelector('#wk').value.trim()||false}]);
+  if(typeof r!=='string')return false;
+  S.worker=r;try{sessionStorage.setItem('fbs_worker',r);}catch(e){}
+  logAdd('login',{});refreshWorkerChip();return true;
+}
+async function askOpenDay(){
+  const un=unclosedDays();
+  const warn=un.length?`<p class="bad">Earlier day(s) were never closed: ${un.map(esc).join(', ')}. The owner will see this.</p>`:'';
+  const r=await ask('Open the day',`${warn}<p>Count the sheets left in the printer's paper pack and enter the number. This is how paper used is checked against prints.</p><input type="number" id="pp" min="0" max="2000" style="width:100%">`,
+    [{l:'Cancel'},{l:'Open the day',cls:'pri',fn:b=>{const v=b.querySelector('#pp').value;if(v===''||+v<0)return false;return +v;}}]);
+  if(typeof r!=='number')return false;
+  logAdd('open',{paper:r});refreshToday();return true;
+}
+async function ensureSession(){
+  if(!CFG.sales)return true;
+  if(!S.worker&&!(await askWorker()))return false;
+  if(!dayOpen()&&!(await askOpenDay()))return false;
+  return true;
+}
+function refreshWorkerChip(){const b=$('btnWorker');b.style.display=CFG.sales?'':'none';b.textContent='On duty: '+(S.worker||'nobody');}
+$('btnWorker').onclick=async()=>{if(await askWorker())toastMsg('Now working: '+S.worker);};
+
+/* ---- wrap capture / upload so a worker and an open day are required */
+const _startCapture=startCapture;
+startCapture=function(){
+  if(CFG.sales&&S.mode==='live'&&!cdTimer&&!sessionReady()){ensureSession().then(ok=>{if(ok)_startCapture();});return;}
+  _startCapture();
+};
+const _loadFile=loadFile;
+loadFile=async function(f){if(CFG.sales&&!(await ensureSession()))return;return _loadFile(f);};
+const _setFrame=setFrame;
+setFrame=async function(c){
+  await _setFrame(c);
+  if(CFG.sales){S.photoId=nextPhotoId();logAdd('photo',{id:S.photoId,src:S.src||'camera'});S.saleBanner=null;showSale(null);
+    await nextFrame();await nextFrame();makeThumb();}
+  updatePrintBtn();
+};
+function nextPhotoId(){const t=todayStr(),n=getLog().filter(e=>e.ty==='photo'&&dayOf(e.t)===t).length+1;return pad2(new Date().getMonth()+1)+pad2(new Date().getDate())+'-'+String(n).padStart(3,'0');}
+const nextRc=()=>'R'+String(getLog().filter(e=>e.ty==='sale').length+1).padStart(4,'0');
+
+/* ---- packages, prices and the print / save buttons */
+const pkgOf=id=>CFG.packages.find(p=>p.id===id);
+window.saveAllowed=()=>!CFG.sales||S.owner||CFG.allowSave;
+function refreshPackages(){
+  const sel=$('pkgSel');sel.innerHTML='';
+  CFG.packages.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=`${p.name} · ${money(p.price)}`;sel.appendChild(o);});
+  if(!CFG.packages.some(p=>p.id===S.pkg))S.pkg=CFG.packages.length?CFG.packages[0].id:'';
+  sel.value=S.pkg;
+  $('pkgBox').style.display=CFG.sales?'':'none';
+  document.body.classList.toggle('sales',!!CFG.sales);
+  const p=pkgOf(S.pkg),pt=$('priceTag');
+  if(CFG.sales&&p){pt.style.display='';pt.className='price';pt.textContent='Collect '+money(p.price);}else pt.style.display='none';
+}
+$('pkgSel').onchange=()=>{S.pkg=$('pkgSel').value;layoutChanged();if(S.frame&&$('autofit').checked)autoFit(true);};
+function updatePrintBtn(){
+  const b=$('btnPrint'),p=CFG.sales?pkgOf(S.pkg):null,k=layoutFor().sheets;
+  if(CFG.sales){b.textContent=p?`Print & record sale · ${money(p.price)}`:'Print & record sale';$('btnReprint').style.display='';}
+  else{b.textContent=k>1?`Print ${k} sheets`:'Print sheet';$('btnReprint').style.display='none';}
+  $('btnEnd').style.display=CFG.sales?'':'none';
+  $('saleInfo').style.display=CFG.sales?'':'none';
+}
+async function printOnly(){const sp=layoutFor();await sendToPrinter(buildSheet(),sp.sheets);bumpCount(sp.sheets);}
+$('btnPrint').onclick=async()=>{
+  if(!CFG.sales){await printOnly();return;}
+  if(!(await ensureSession()))return;
+  const p=pkgOf(S.pkg);
+  if(!p){note('No package is set up. Ask the owner.',true);return;}
+  if(!S.photoId){note('Take a photo first.',true);return;}
+  const sale=logAdd('sale',{photo:S.photoId,pkg:p.name,copies:p.copies,sheets:p.sheets||1,amount:p.price,rc:nextRc()});
+  showSale(sale);await printOnly();
+};
+$('btnReprint').onclick=async()=>{
+  if(!S.result)return;
+  if(!(await ensureSession()))return;
+  const r=await ask('Free reprint',`<p>A reprint is not charged. The owner sees every reprint and its reason.</p><select id="why" style="width:100%;margin-bottom:8px"><option>Printer problem / paper jam</option><option>Print came out badly</option><option>Customer lost the print (same day)</option><option>Other</option></select><input type="text" id="oth" maxlength="60" placeholder="Details (needed for Other)" style="width:100%">`,
+    [{l:'Cancel'},{l:'Reprint',cls:'pri',fn:b=>{const w=b.querySelector('#why').value,o=b.querySelector('#oth').value.trim();if(w==='Other'&&!o)return false;return w+(o?': '+o:'');}}]);
+  if(typeof r!=='string')return;
+  const p=pkgOf(S.pkg);
+  logAdd('reprint',{photo:S.photoId,pkg:p?p.name:'',copies:layoutFor().n,sheets:layoutFor().sheets,reason:r});await printOnly();
+};
+const _saveSheet=$('btnSaveSheet').onclick,_saveOne=$('btnSaveOne').onclick;
+$('btnSaveSheet').onclick=()=>{if(!saveAllowed()){note('Saving files is switched off by the owner.',true);return;}if(CFG.sales)logAdd('save',{photo:S.photoId,kind:'sheet'});_saveSheet();};
+$('btnSaveOne').onclick=()=>{if(!saveAllowed()){note('Saving files is switched off by the owner.',true);return;}if(CFG.sales)logAdd('save',{photo:S.photoId,kind:'single'});_saveOne();};
+function showSale(sale){
+  const box=$('saleInfo');
+  if(!sale){box.innerHTML='';return;}
+  S.saleBanner=sale;
+  box.innerHTML=`<div class="sale">Receipt <b>${esc(sale.rc)}</b> · collect <b>${money(sale.amount)}</b> <button class="lnk" id="voidBtn">Printer problem? Cancel sale</button></div>`;
+  $('voidBtn').onclick=()=>voidSale(sale);
+}
+async function voidSale(sale){
+  const r=await ask('Cancel this sale',`<p>Use this only if nothing usable was printed and the customer is not charged. The owner sees every cancelled sale.</p><select id="why" style="width:100%;margin-bottom:8px"><option>Printer problem / paper jam</option><option>Customer cancelled</option><option>Wrong number of copies</option><option>Other</option></select><input type="text" id="oth" maxlength="60" placeholder="Details (needed for Other)" style="width:100%">`,
+    [{l:'Keep the sale'},{l:'Cancel sale',cls:'pri',fn:b=>{const w=b.querySelector('#why').value,o=b.querySelector('#oth').value.trim();if(w==='Other'&&!o)return false;return w+(o?': '+o:'');}}]);
+  if(typeof r!=='string')return;
+  logAdd('void',{sale:sale.n,rc:sale.rc,amount:sale.amount,reason:r});showSale(null);toastMsg('Sale '+sale.rc+' cancelled.');
+}
+
+/* ---- statistics from the log */
+function stats(L){
+  const D={},sales={},photos={},W={};
+  const dd=k=>D[k]||(D[k]={day:k,photos:0,sales:0,amount:0,packs:{},voids:0,voidAmt:0,reprints:0,saves:0,sheets:0,paperOpen:null,close:null,workers:new Set(),opened:false});
+  const wk=w=>W[w]||(W[w]={w,photos:0,sales:0,amount:0,voids:0,reprints:0,saves:0});
+  for(const e of L){
+    const k=dayOf(e.t),d=dd(k),w=(e.w&&e.ty!=='config')?wk(e.w):null;
+    if(e.ty==='photo'){d.photos++;photos[e.id]={e,day:k,sold:false,saved:false};if(w)w.photos++;if(e.w)d.workers.add(e.w);}
+    else if(e.ty==='sale'){d.sales++;d.amount+=e.amount;const pk=e.pkg||(e.copies+' copies');d.packs[pk]=(d.packs[pk]||0)+1;d.sheets+=e.sheets||1;sales[e.n]={e,day:k,voided:false};
+      if(photos[e.photo])photos[e.photo].sold=true;if(w){w.sales++;w.amount+=e.amount;}if(e.w)d.workers.add(e.w);}
+    else if(e.ty==='void'){const s=sales[e.sale];if(s&&!s.voided){s.voided=true;const sd=dd(s.day);sd.sales--;sd.amount-=s.e.amount;sd.packs[s.e.pkg||(s.e.copies+' copies')]--;sd.voids++;sd.voidAmt+=s.e.amount;
+      const sw=W[s.e.w];if(sw){sw.sales--;sw.amount-=s.e.amount;sw.voids++;}
+      if(photos[s.e.photo]&&!Object.values(sales).some(x=>!x.voided&&x.e.photo===s.e.photo))photos[s.e.photo].sold=false;}}
+    else if(e.ty==='reprint'){d.reprints++;d.sheets+=e.sheets||1;if(w)w.reprints++;if(photos[e.photo])photos[e.photo].free=true;}
+    else if(e.ty==='save'){d.saves++;if(w)w.saves++;if(photos[e.photo])photos[e.photo].saved=true;}
+    else if(e.ty==='open'){if(!d.opened){d.paperOpen=e.paper;d.opened=true;}}
+    else if(e.ty==='close'){d.close=e;}
+  }
+  return {D,sales,photos,W};
+}
+function refreshToday(){
+  if(!CFG.sales){showCount();return;}
+  const st=stats(getLog()),d=st.D[todayStr()]||{photos:0,sales:0,amount:0};
+  $('count').textContent=`Today: ${d.photos} photos taken · ${d.sales} sales · ${money(d.amount)}`;
+}
+
+/* ---- closing the day */
+function daySummary(day,st){
+  const d=st.D[day]||{photos:0,sales:0,amount:0,packs:{},voids:0,voidAmt:0,reprints:0,saves:0,sheets:0,close:null,workers:new Set()};
+  const packs=Object.keys(d.packs).filter(k=>d.packs[k]>0).sort().map(k=>`${k} x${d.packs[k]}`).join(', ')||'none';
+  const c=d.close,lines=[
+    'NYANSATEK Full-Body Photo Studio: day close '+day,
+    'Worker(s): '+([...d.workers].join(', ')||'-'),
+    `Photos taken: ${d.photos}`,
+    `Sales: ${d.sales} (${packs}) = ${money(d.amount)}`,
+    `Cancelled sales: ${d.voids}${d.voids?' ('+money(d.voidAmt)+')':''} | Free reprints: ${d.reprints} | Files saved: ${d.saves}`];
+  if(c){lines.push(`Cash expected: ${money(d.amount)} | Cash counted: ${money(c.cash)} | Difference: ${money(c.cash-d.amount)}`);
+    if(d.paperOpen!=null&&c.paper!=null)lines.push(`Paper: opened with ${d.paperOpen}, left ${c.paper}, used ${d.paperOpen-c.paper}, sheets logged ${d.sheets}, difference ${d.paperOpen-c.paper-d.sheets}`);}
+  return lines.join('\n');
+}
+$('btnEnd').onclick=async()=>{
+  if(!CFG.sales)return;
+  if(!(await ensureSession()))return;
+  if(CFG.closePin&&!S.owner&&!(await gatePin('The owner PIN is needed to close the day.')))return;
+  const t=todayStr(),st=stats(getLog()),d=st.D[t]||{amount:0,sales:0,photos:0,sheets:0,paperOpen:null};
+  const r=await ask('End of day',`<p>Photos taken: <b>${d.photos}</b> · Sales: <b>${d.sales}</b><br>Cash that should be in the drawer: <b>${money(d.amount)}</b></p>
+    <label class="fldm">Cash counted now (${esc(CFG.currency)})<input type="number" id="cash" min="0" step="0.01"></label>
+    <label class="fldm">Paper sheets left in the pack<input type="number" id="pp" min="0" max="2000"></label>`,
+    [{l:'Cancel'},{l:'Close the day',cls:'pri',fn:b=>{const c=b.querySelector('#cash').value,p=b.querySelector('#pp').value;if(c===''||p==='')return false;return {cash:+c,paper:+p};}}]);
+  if(!r||typeof r!=='object')return;
+  logAdd('close',{cash:r.cash,paper:r.paper,expected:d.amount,sheets:d.sheets});
+  const text=daySummary(t,stats(getLog()));
+  const wa=CFG.wa?`<button class="btn" id="waBtn">Send to owner on WhatsApp</button>`:'';
+  await ask('Day closed',`<pre class="sum" id="sumTxt">${esc(text)}</pre><p class="tiny">Send this summary to the owner before leaving.</p><div class="mbtn2">${wa}<button class="btn" id="cpBtn">Copy summary</button></div>`,[{l:'Done',cls:'pri'}],{onOpen:null});
+};
+document.addEventListener('click',e=>{
+  if(e.target.id==='cpBtn'){const t=$('sumTxt').textContent;if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>{});e.target.textContent='Copied';}
+  if(e.target.id==='waBtn'){window.open('https://wa.me/'+CFG.wa.replace(/\D/g,'')+'?text='+encodeURIComponent($('sumTxt').textContent),'_blank');}
+});
+
+/* ---- owner dashboard */
+let ownerRange='today',ownerEl=null;
+function closeOwnerView(){if(ownerEl){ownerEl.remove();ownerEl=null;}}
+$('btnDash').onclick=()=>{if(S.owner)openOwnerView();};
+function inRange(day){const t=todayStr();
+  if(ownerRange==='today')return day===t;
+  if(ownerRange==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);return day===dstr(d);}
+  if(ownerRange==='week'){const d=new Date();d.setDate(d.getDate()-6);return day>=dstr(d);}
+  if(ownerRange==='month')return day.slice(0,7)===t.slice(0,7);
+  return true;}
+function describe(e){
+  switch(e.ty){
+    case 'photo':return `Photo ${e.id} (${e.src==='file'?'from file':'camera'})`;
+    case 'sale':return `SALE ${e.rc}: ${e.pkg||e.copies+' copies'}, photo ${e.photo}`;
+    case 'void':return `CANCELLED ${e.rc}: ${e.reason}`;
+    case 'reprint':return `Free reprint (${e.pkg||e.copies+' copies'}, photo ${e.photo}): ${e.reason}`;
+    case 'save':return `File saved (${e.kind}, photo ${e.photo})`;
+    case 'open':return `Day opened, ${e.paper} sheets in pack`;
+    case 'close':return `Day closed: cash counted ${money(e.cash)} (expected ${money(e.expected)}), paper left ${e.paper}`;
+    case 'login':return 'Started work';
+    case 'config':return 'Settings changed: '+e.what;
+    default:return e.ty;}
+}
+async function openOwnerView(){
+  closeOwnerView();
+  const L=getLog(),st=stats(L),days=Object.keys(st.D).filter(inRange).sort().reverse(),ver=verifyLog();
+  const sum=days.reduce((a,k)=>{const d=st.D[k];a.photos+=d.photos;a.sales+=d.sales;a.amount+=d.amount;a.voids+=d.voids;a.reprints+=d.reprints;a.saves+=d.saves;return a;},{photos:0,sales:0,amount:0,voids:0,reprints:0,saves:0});
+  const unsold=Object.values(st.photos).filter(p=>inRange(p.day)&&!p.sold);
+  const kpi=(l,v,cls)=>`<div class="kpi ${cls||''}"><div class="kv">${v}</div><div class="kl">${l}</div></div>`;
+  const rangeBtn=(k,l)=>`<button class="chip rb ${ownerRange===k?'on':''}" data-r="${k}">${l}</button>`;
+  const rows=days.map(k=>{const d=st.D[k],c=d.close,t=todayStr();
+    const cashV=c?c.cash-d.amount:null,paperUsed=(d.paperOpen!=null&&c&&c.paper!=null)?d.paperOpen-c.paper:null,paperV=paperUsed==null?null:paperUsed-d.sheets;
+    const packs=Object.keys(d.packs).filter(x=>d.packs[x]>0).sort().map(x=>`${x} ×${d.packs[x]}`).join(' ');
+    const status=c?'Closed':(k===t?'Open':'NOT CLOSED');
+    return `<tr><td>${k}</td><td>${esc([...d.workers].join(', '))}</td><td>${d.photos}</td><td>${d.sales}</td><td>${packs||'-'}</td><td class="r">${money(d.amount)}</td><td>${d.voids}</td><td>${d.reprints}</td><td class="r">${c?money(c.cash):'-'}</td><td class="r ${cashV!=null&&Math.abs(cashV)>0.004?'bad':''}">${cashV==null?'-':money(cashV)}</td><td>${paperUsed==null?'-':paperUsed+' used / '+d.sheets+' logged'}</td><td class="${paperV!=null&&paperV!==0?'bad':''}">${paperV==null?'-':(paperV>0?'+':'')+paperV}</td><td class="${status==='NOT CLOSED'?'bad':''}">${status}</td></tr>`;}).join('');
+  const wrows=Object.values(st.W).map(w=>`<tr><td>${esc(w.w)}</td><td>${w.photos}</td><td>${w.sales}</td><td class="r">${money(w.amount)}</td><td>${w.voids}</td><td>${w.reprints}</td><td>${w.saves}</td></tr>`).join('');
+  const lrows=L.filter(e=>inRange(dayOf(e.t))).slice().reverse().slice(0,300).map(e=>`<tr class="${e.ty==='void'||e.ty==='reprint'||e.ty==='save'?'flag':''}"><td>${e.n}</td><td>${dayOf(e.t)} ${timeOf(e.t)}</td><td>${esc(e.w)}</td><td>${esc(describe(e))}</td><td class="r">${e.ty==='sale'?money(e.amount):(e.ty==='void'?'-'+money(e.amount):'')}</td></tr>`).join('');
+  const ov=document.createElement('div');ov.className='ov full';
+  ov.innerHTML=`<div class="owner"><div class="ohead"><h2>Owner dashboard</h2><span class="sp"></span>
+    ${rangeBtn('today','Today')}${rangeBtn('yesterday','Yesterday')}${rangeBtn('week','Last 7 days')}${rangeBtn('month','This month')}${rangeBtn('all','All')}
+    <button class="btn" id="oSet">Settings</button><button class="btn" id="oCsv">Export log (CSV)</button><button class="btn" id="oCsv2">Export days (CSV)</button><button class="btn pri" id="oClose">Close</button></div>
+    <div class="obody">
+    <div class="integ ${ver.ok?'okb':'badb'}">${esc(ver.msg)}</div>
+    <div class="kpis">${kpi('Photos taken',sum.photos)}${kpi('Sales',sum.sales)}${kpi('Money due',money(sum.amount),'gold')}${kpi('Photos with no sale',unsold.length,unsold.length?'warn':'')}${kpi('Cancelled sales',sum.voids,sum.voids?'warn':'')}${kpi('Free reprints',sum.reprints,sum.reprints?'warn':'')}${kpi('Files saved',sum.saves,sum.saves?'warn':'')}</div>
+    <h3>By day</h3><div class="tw"><table><thead><tr><th>Date</th><th>Worker(s)</th><th>Photos</th><th>Sold</th><th>Packs</th><th class="r">Money due</th><th>Cancelled</th><th>Reprints</th><th class="r">Cash counted</th><th class="r">Cash difference</th><th>Paper</th><th>Paper diff.</th><th>Day</th></tr></thead><tbody>${rows||'<tr><td colspan="13">No activity in this period.</td></tr>'}</tbody></table></div>
+    <p class="tiny">Cash difference = cash counted − money due (negative means cash is short). Paper diff. = sheets used from the pack − sheets logged; anything above 0 means paper was used without a recorded sale or reprint (jams and test prints cause small differences).</p>
+    <h3>By worker (this log)</h3><div class="tw"><table><thead><tr><th>Worker</th><th>Photos</th><th>Sold</th><th class="r">Money due</th><th>Cancelled</th><th>Reprints</th><th>Files saved</th></tr></thead><tbody>${wrows||'<tr><td colspan="7">-</td></tr>'}</tbody></table></div>
+    <h3>Photos taken with no sale recorded (${unsold.length})</h3><p class="tiny">Normal for retakes. Many of these in one day, or the same worker often, is worth asking about.</p><div class="gal" id="gal">${unsold.slice(-60).reverse().map(p=>`<div class="gth"><div class="gph" data-id="${esc(p.e.id)}"></div><div class="gtl">${esc(p.e.id)}<br>${timeOf(p.e.t)} ${esc(p.e.w)}${p.free?'<br><b class="bad">free reprint</b>':''}${p.saved?'<br><b class="bad">file saved</b>':''}</div></div>`).join('')||'<p class="tiny">None.</p>'}</div>
+    <h3>Activity record (latest 300)</h3><div class="tw"><table><thead><tr><th>#</th><th>Time</th><th>Worker</th><th>What happened</th><th class="r">Amount</th></tr></thead><tbody>${lrows||'<tr><td colspan="5">-</td></tr>'}</tbody></table></div>
+    </div></div>`;
+  document.body.appendChild(ov);ownerEl=ov;
+  ov.querySelectorAll('.rb').forEach(b=>b.onclick=()=>{ownerRange=b.dataset.r;openOwnerView();});
+  $('oClose').onclick=closeOwnerView;
+  $('oSet').onclick=openSettings;
+  $('oCsv').onclick=()=>csvDownload('log');$('oCsv2').onclick=()=>csvDownload('days');
+  for(const el of ov.querySelectorAll('.gph')){thumbGet(el.dataset.id).then(u=>{if(u)el.style.backgroundImage=`url(${u})`;else el.textContent='no image';});}
+}
+function csvCell(v){v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function csvDownload(kind){
+  const L=getLog(),st=stats(L);let rows;
+  if(kind==='log'){rows=[['No','Date','Time','Worker','Event','Photo','Package','Amount','Receipt','Reason or detail']].concat(L.map(e=>[e.n,dayOf(e.t),timeOf(e.t),e.w,e.ty,e.photo||e.id||'',e.pkg||e.copies||'',e.amount!=null?e.amount:'',e.rc||'',e.reason||(e.ty==='close'?`cash ${e.cash}; paper left ${e.paper}`:(e.ty==='open'?`paper ${e.paper}`:''))]));}
+  else{rows=[['Date','Workers','Photos','Sales','Amount due','Cancelled','Cancelled amount','Free reprints','Files saved','Paper at open','Paper left','Sheets logged','Cash counted']].concat(Object.keys(st.D).sort().map(k=>{const d=st.D[k],c=d.close;return [k,[...d.workers].join('; '),d.photos,d.sales,d.amount,d.voids,d.voidAmt,d.reprints,d.saves,d.paperOpen==null?'':d.paperOpen,c?c.paper:'',d.sheets,c?c.cash:''];}));}
+  const blob=new Blob(['﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='FullBodyStudio_'+kind+'_'+stamp()+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+}
+
+/* ---- owner settings */
+function pkgRowHtml(p){
+  const sizes=PHOTO_SIZES.map((s,i)=>i===CUSTOM_IDX?'':`<option value="${i}" ${i===p.size?'selected':''}>${esc(s[0])}</option>`).join('');
+  const papers=PAPERS.map((s,i)=>`<option value="${i}" ${i===p.paper?'selected':''}>${esc(s[0])}</option>`).join('');
+  return `<div class="pkc" data-id="${esc(p.id)}"><div class="pkh"><input type="text" class="pn" maxlength="40" value="${esc(p.name)}" placeholder="Package name"><button class="lnk rm">remove</button></div>
+    <div class="pkg"><label>Photo size<select class="ps">${sizes}</select></label><label>Paper<select class="pa">${papers}</select></label><label>Photos on one sheet<input type="number" class="pc" min="1" max="20" value="${p.copies}"></label>
+    <label>Sheets printed<input type="number" class="pq" min="1" max="20" value="${p.sheets||1}"></label><label>Price (${esc(CFG.currency)})<input type="number" class="pp2" min="0" step="0.5" value="${p.price}"></label></div></div>`;
+}
+function readPackages(b){
+  return [...b.querySelectorAll('.pkc')].map(r=>({id:r.dataset.id,name:r.querySelector('.pn').value.trim(),size:+r.querySelector('.ps').value,paper:+r.querySelector('.pa').value,
+    copies:Math.round(+r.querySelector('.pc').value),sheets:Math.round(+r.querySelector('.pq').value),price:+r.querySelector('.pp2').value}));
+}
+function packageError(rows){
+  if(!rows.length)return 'Add at least one package.';
+  const names=new Set();
+  for(const p of rows){
+    if(!p.name)return 'Every package needs a name.';
+    if(names.has(p.name.toLowerCase()))return 'Two packages have the same name: '+p.name;names.add(p.name.toLowerCase());
+    if(!(p.copies>=1)||!(p.sheets>=1)||!(p.sheets<=20))return `Check "${p.name}": photos per sheet must be at least 1 and sheets printed between 1 and 20.`;
+    if(!(p.price>=0))return `Check the price of "${p.name}".`;
+    const L=geometryFor(p.size,p.paper,100,150);
+    if(L.fill&&p.copies>1)return `"${p.name}": one photo fills the whole sheet, so photos per sheet must be 1. Use "Sheets printed" for more prints.`;
+    if(!L.max)return `"${p.name}": that photo size does not fit on that paper.`;
+    if(p.copies>L.max)return `"${p.name}": only ${L.max} photos of that size fit on that paper.`;
+  }
+  return '';
+}
+async function openSettings(){
+  const body=`<label class="chk"><input type="checkbox" id="sSales" ${CFG.sales?'checked':''}> Turn on sales tracking (workers must start work, open the day, and every print is a recorded sale)</label>
+    <div class="fldm">Currency symbol<input type="text" id="sCur" value="${esc(CFG.currency)}" maxlength="6" style="width:80px"></div>
+    <div class="fldm">Packages and prices (what the worker can sell)<div id="sPk">${CFG.packages.map(pkgRowHtml).join('')}</div><button class="btn" id="sAdd" style="margin-top:6px;padding:4px 10px">Add a package</button></div>
+    <div class="fldm">Workers (one name per line)<textarea id="sWk" rows="3" style="width:100%">${esc(CFG.workers.join('\n'))}</textarea></div>
+    <div class="fldm">Your WhatsApp number for day-end summaries (e.g. 233536340578, optional)<input type="text" id="sWa" value="${esc(CFG.wa)}" style="width:100%"></div>
+    <label class="chk"><input type="checkbox" id="sSave" ${CFG.allowSave?'checked':''}> Workers may save photo files (every save is recorded)</label>
+    <label class="chk"><input type="checkbox" id="sCp" ${CFG.closePin?'checked':''}> Closing the day needs the owner PIN</label>
+    <div class="fldm">Keep photo thumbnails for (days)<input type="number" id="sTh" min="1" max="365" value="${CFG.thumbDays}" style="width:80px"></div>
+    <p><button class="btn" id="sPin">Change owner PIN</button> <button class="btn" id="sReset">Erase all records…</button></p><p id="serr" class="bad"></p>`;
+  const p=ask('Settings',body,[{l:'Cancel'},{l:'Save settings',cls:'pri',fn:b=>{
+    const pk=readPackages(b),err=packageError(pk);
+    if(err){b.querySelector('#serr').textContent=err;return false;}
+    return {on:b.querySelector('#sSales').checked,cur:b.querySelector('#sCur').value.trim()||'GH₵',pk,workers:b.querySelector('#sWk').value.split('\n').map(s=>s.trim()).filter(Boolean),wa:b.querySelector('#sWa').value.trim(),save:b.querySelector('#sSave').checked,cp:b.querySelector('#sCp').checked,th:Math.max(1,+b.querySelector('#sTh').value||30)};}}],{wide:true});
+  await nextFrame();const box=document.querySelector('.mbox'),host=box.querySelector('#sPk');
+  const wire=()=>host.querySelectorAll('.rm').forEach(bt=>bt.onclick=()=>{bt.closest('.pkc').remove();});
+  wire();
+  box.querySelector('#sAdd').onclick=()=>{host.insertAdjacentHTML('beforeend',pkgRowHtml({id:'p'+Date.now()+Math.floor(Math.random()*1000),name:'New package',size:0,paper:0,copies:1,sheets:1,price:20}));wire();};
+  box.querySelector('#sPin').onclick=async()=>{if(await setPinFlow()){logAdd('config',{what:'owner PIN changed'},'Owner');toastMsg('PIN changed.');}};
+  box.querySelector('#sReset').onclick=async()=>{
+    const t=await ask('Erase all records',`<p class="bad">This deletes every photo, sale and day record on this computer. It cannot be undone. Export the CSV first.</p><p>Type <b>ERASE</b> to confirm.</p><input type="text" id="cf" style="width:100%">`,[{l:'Cancel'},{l:'Erase',cls:'pri',fn:b=>b.querySelector('#cf').value==='ERASE'?true:false}]);
+    if(t===true&&(await gatePin('Enter the owner PIN to erase all records.'))){localStorage.removeItem(LOGK);localStorage.removeItem(HEADK);await thumbClear();logAdd('config',{what:'ALL RECORDS ERASED'},'Owner');refreshToday();toastMsg('All records erased.');}
+  };
+  const r=await p;
+  if(!r||typeof r!=='object')return;
+  const changes=[],desc=a=>a.map(x=>`${x.name}=${x.price}`).join(', ');
+  if(r.on!==CFG.sales)changes.push(r.on?'sales tracking ON':'sales tracking OFF');
+  if(JSON.stringify(r.pk)!==JSON.stringify(CFG.packages))changes.push('packages '+desc(CFG.packages)+' -> '+desc(r.pk));
+  if(r.workers.join('|')!==CFG.workers.join('|'))changes.push('worker list');
+  if(r.save!==CFG.allowSave)changes.push('worker saving '+(r.save?'allowed':'blocked'));
+  if(r.cp!==CFG.closePin)changes.push('close-day PIN '+(r.cp?'on':'off'));
+  CFG.sales=r.on;CFG.currency=r.cur;CFG.packages=r.pk;CFG.workers=r.workers;CFG.wa=r.wa;CFG.allowSave=r.save;CFG.closePin=r.cp;CFG.thumbDays=r.th;saveCfg();
+  if(changes.length)logAdd('config',{what:changes.join('; ')},'Owner');
+  layoutChanged();refreshWorkerChip();enableOut(!!S.result);refreshToday();
+  if(ownerEl)openOwnerView();
+}
+
+/* ---- start-up of the sales module */
+refreshWorkerChip();thumbPrune();
+
+setBg('#ffffff');setBgMode('orig');syncOut();layoutChanged();showCount();envLoad();
+startCam().then(listCams);
+loadAI();
+</script>
+</body>
+</html>
